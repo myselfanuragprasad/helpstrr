@@ -1,0 +1,861 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Helpsters4U — Admin Dashboard</title>
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+  <!-- Favicon (optional) -->
+  <style>
+    /* =============================================
+       Theme variables & base resets
+       ============================================= */
+    :root{
+      --bg: #ffffff;
+      --primary: #0f62fe;       /* primary blue */
+      --accent: #06b6d4;        /* accent cyan */
+      --muted: #64748b;         /* gray text */
+      --card: #f8fafc;
+      --glass: rgba(15,98,254,0.06);
+      --radius: 12px;
+      --shadow-sm: 0 4px 10px rgba(12, 24, 48, 0.06);
+      --shadow-md: 0 8px 24px rgba(12, 24, 48, 0.08);
+      --max-width: 1200px;
+      --transition: 250ms cubic-bezier(.2,.9,.3,1);
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background:var(--bg);
+      color:#0b1220;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      line-height:1.4;
+      padding: 20px;
+      display:flex;
+      justify-content:center;
+    }
+
+    /* Container to center the dashboard and add padding on big screens */
+    .app-wrap{
+      width:100%;
+      max-width:var(--max-width);
+    }
+
+    /* Top-level layout */
+    .layout{
+      display:grid;
+      grid-template-columns: 260px 1fr;
+      gap: 20px;
+      align-items:start;
+    }
+
+    /* -------- Sidebar -------- */
+    .sidebar{
+      background:linear-gradient(180deg, rgba(255,255,255,0.9), rgba(255,255,255,0.96));
+      border-radius:var(--radius);
+      padding:18px;
+      box-shadow:var(--shadow-sm);
+      height: calc(100vh - 60px);
+      position:sticky;
+      top:30px;
+      overflow:hidden;
+      transition:width var(--transition), transform var(--transition);
+    }
+
+    .sidebar.collapsed {
+      width:72px !important;
+      padding:12px 8px;
+    }
+
+    .brand{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      margin-bottom:18px;
+    }
+
+    .logo{
+      width:44px;
+      height:44px;
+      background:var(--primary);
+      border-radius:10px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:white;
+      font-weight:700;
+      font-family: "Poppins", sans-serif;
+      box-shadow:var(--shadow-sm);
+    }
+
+    .brand .title{
+      font-family: "Poppins", sans-serif;
+      font-weight:700;
+      letter-spacing: -0.2px;
+      color:var(--primary);
+      font-size:16px;
+    }
+
+    .nav{
+      margin-top:12px;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+
+    .nav .item{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      padding:10px 12px;
+      border-radius:10px;
+      color:var(--muted);
+      cursor:pointer;
+      transition: all var(--transition);
+      user-select:none;
+    }
+
+    .nav .item svg{width:18px;height:18px;flex-shrink:0}
+
+    .nav .item:hover{
+      background:linear-gradient(90deg, rgba(6,182,212,0.06), rgba(15,98,254,0.04));
+      color:var(--primary);
+      transform:translateX(4px);
+    }
+
+    .nav .item.active{
+      background: linear-gradient(90deg, rgba(15,98,254,0.08), rgba(6,182,212,0.03));
+      color:var(--primary);
+      box-shadow:var(--shadow-sm);
+    }
+
+    .collapse-toggle{
+      margin-top:auto;
+      display:flex;
+      gap:8px;
+      align-items:center;
+      justify-content:center;
+      padding:8px;
+      cursor:pointer;
+      color:var(--muted);
+      border-radius:8px;
+      transition:background var(--transition), transform var(--transition);
+    }
+    .collapse-toggle:hover{background:var(--card); transform:translateY(-2px)}
+
+    /* Sidebar icon-only state: hide labels */
+    .sidebar.collapsed .title,
+    .sidebar.collapsed .label { display:none }
+    .sidebar.collapsed .nav .item{ justify-content:center; padding:12px }
+
+    /* -------- Main Content -------- */
+    .main{
+      min-height: calc(100vh - 60px);
+      padding:18px;
+      border-radius:var(--radius);
+      background:transparent;
+    }
+
+    /* Top bar */
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:18px;
+    }
+
+    .search-area{
+      display:flex;
+      align-items:center;
+      gap:12px;
+    }
+
+    .search {
+      display:flex;
+      align-items:center;
+      gap:8px;
+      background:#fff;
+      border-radius:999px;
+      padding:8px 12px;
+      box-shadow:var(--shadow-sm);
+    }
+
+    .search input{
+      border:0;
+      outline:0;
+      width:220px;
+      font-size:14px;
+      color:var(--muted);
+      background:transparent;
+    }
+
+    .profile{
+      display:flex;
+      gap:12px;
+      align-items:center;
+    }
+
+    .avatar{
+      width:42px;
+      height:42px;
+      border-radius:50%;
+      overflow:hidden;
+      cursor:pointer;
+      box-shadow:var(--shadow-sm);
+      border: 2px solid rgba(15,98,254,0.06);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:linear-gradient(180deg,var(--primary), #0b4fcc);
+      color:white;
+      font-weight:600;
+    }
+
+    .profile .username{
+      display:flex;
+      flex-direction:column;
+      align-items:flex-end;
+      gap:2px;
+    }
+    .profile .username .name{ font-weight:600; font-size:14px }
+    .profile .username .role{ font-size:12px; color:var(--muted) }
+
+    .profile-dropdown{
+      position:relative;
+    }
+
+    .dropdown-menu{
+      position:absolute;
+      right:0;
+      top:54px;
+      min-width:160px;
+      background:white;
+      box-shadow:var(--shadow-md);
+      border-radius:10px;
+      overflow:hidden;
+      display:none;
+      z-index:40;
+    }
+    .dropdown-menu.show{ display:block }
+
+    .dropdown-menu button{
+      width:100%;
+      padding:10px 12px;
+      background:transparent;
+      border:0;
+      text-align:left;
+      color:#172033;
+      font-size:14px;
+      cursor:pointer;
+    }
+    .dropdown-menu button:hover{ background:var(--card) }
+
+    /* Greeting & header */
+    .header{
+      display:flex;
+      gap:16px;
+      align-items:center;
+      justify-content:space-between;
+      margin-bottom:16px;
+    }
+
+    .greeting{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+    }
+    .greeting .hi{ font-size:18px; font-weight:600 }
+    .greeting .sub{ color:var(--muted); font-size:13px }
+
+    /* Cards grid */
+    .cards{
+      display:grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap:16px;
+      margin-bottom:18px;
+    }
+
+    .card{
+      background:linear-gradient(180deg, #fff, var(--card));
+      border-radius:14px;
+      padding:12px;
+      box-shadow:var(--shadow-sm);
+      min-height:92px;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      justify-content:space-between;
+      transition: transform var(--transition);
+    }
+
+    .card:hover{ transform:translateY(-6px) }
+
+    .card .meta{
+      display:flex;
+      align-items:center;
+      gap:12px;
+    }
+
+    .card .icon{
+      width:44px;
+      height:44px;
+      border-radius:10px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:linear-gradient(180deg, rgba(6,182,212,0.12), rgba(15,98,254,0.06));
+      color:var(--primary);
+      font-weight:700;
+    }
+
+    .card .title{ color:var(--muted); font-size:13px }
+    .card .value{ font-weight:700; font-size:20px }
+
+    .progress{
+      height:8px;
+      background: #e6eefc;
+      border-radius:999px;
+      overflow:hidden;
+    }
+    .progress > i{
+      display:block;
+      height:100%;
+      background:linear-gradient(90deg,var(--primary), var(--accent));
+      width:50%;
+      transition:width 500ms ease;
+    }
+
+    /* Charts and tables layout */
+    .lower{
+      display:grid;
+      grid-template-columns: 2fr 1fr;
+      gap:16px;
+      margin-bottom:24px;
+    }
+
+    .panel{
+      background:linear-gradient(180deg,#fff,var(--card));
+      border-radius:12px;
+      padding:14px;
+      box-shadow:var(--shadow-sm);
+    }
+
+    .panel h3{
+      margin:0 0 12px 0;
+      font-size:15px;
+      color:#0b1220;
+    }
+
+    /* Table styles */
+    table{
+      width:100%;
+      border-collapse:collapse;
+      font-size:13px;
+    }
+    thead th{
+      text-align:left;
+      padding:8px 10px;
+      color:var(--muted);
+      font-weight:600;
+      font-size:12px;
+      border-bottom:1px solid #eef3fb;
+    }
+    tbody td{
+      padding:10px;
+      border-bottom:1px dashed #f1f5f9;
+      vertical-align:middle;
+      color:#0b1220;
+    }
+
+    .badge{
+      display:inline-block;
+      padding:6px 10px;
+      font-size:12px;
+      border-radius:999px;
+      font-weight:600;
+    }
+    .badge.success{ background: rgba(16,185,129,0.12); color: #059669 }
+    .badge.pending{ background: rgba(250,204,21,0.12); color: #b45309 }
+    .badge.cancel{ background: rgba(239,68,68,0.08); color: #dc2626 }
+
+    /* Responsive */
+    @media (max-width: 1100px){
+      .cards{ grid-template-columns: repeat(2,1fr) }
+      .layout{ grid-template-columns: 220px 1fr }
+      .sidebar{ height:auto; position:relative; top:0; max-height: 80vh; }
+    }
+
+    @media (max-width: 760px){
+      body{ padding:12px }
+      .layout{ grid-template-columns: 1fr; gap:12px }
+      .sidebar{ order:2; width:100% }
+      .main{ order:1 }
+      .cards{ grid-template-columns: 1fr }
+      .lower{ grid-template-columns: 1fr; }
+      .sidebar.collapsed{ width:100% }
+      .search input{ width:120px }
+      .profile .username{ display:none }
+    }
+
+    /* Small niceties */
+    .muted{ color:var(--muted) }
+    .small{ font-size:12px }
+    .flex{ display:flex; align-items:center; gap:8px }
+    .right{ margin-left:auto }
+  </style>
+</head>
+<body>
+  <div class="app-wrap">
+    <div class="layout" id="layoutRoot">
+      <!-- ========== SIDEBAR ========== -->
+      <aside class="sidebar" id="sidebar">
+        <div class="brand">
+          <div class="logo" aria-hidden="true">H4U</div>
+          <div>
+            <div class="title">Helpsters4U</div>
+            <div class="small muted">Admin Panel</div>
+          </div>
+        </div>
+
+        <nav class="nav" id="mainNav" role="navigation" aria-label="Main navigation">
+          <!-- Each item: SVG icon + label. Active state class 'active' toggles highlight -->
+          <div class="item active" data-key="dashboard">
+            <!-- dashboard icon -->
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 13h8V3H3v10zM3 21h8v-6H3v6zM13 21h8V11h-8v10zM13 3v6h8V3h-8z" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <div class="label">Dashboard</div>
+          </div>
+
+          <div class="item" data-key="bookings">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 7h18M7 3v4M17 3v4M21 21H3a2 2 0 0 1-2-2V8h22v11a2 2 0 0 1-2 2z" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <div class="label">Bookings</div>
+          </div>
+
+          <div class="item" data-key="helpers">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 21v-2a4 4 0 0 0-3-3.87M4 21v-2a4 4 0 0 1 3-3.87M12 7a4 4 0 1 0 0-8 4 4 0 0 0 0 8z" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <div class="label">Helpers</div>
+          </div>
+
+          <div class="item" data-key="payments">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 1v22M17 5H7a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2z" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <div class="label">Payments</div>
+          </div>
+
+          <div class="item" data-key="clients">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 21v-2a4 4 0 0 0-3-3.87M4 21v-2a4 4 0 0 1 3-3.87M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <div class="label">Clients</div>
+          </div>
+
+          <div class="item" data-key="reports">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 3v18h18" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 3v6H9v12" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <div class="label">Reports</div>
+          </div>
+
+          <div class="item" data-key="settings">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 15.5A3.5 3.5 0 1 0 12 8.5a3.5 3.5 0 0 0 0 7z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06A2 2 0 1 1 2.27 18.9l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09c.68 0 1.3-.37 1.51-1a1.65 1.65 0 0 0-.33-1.82L4.3 6.27A2 2 0 1 1 7.13 3.44l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09c.68 0 1.3.37 1.51 1a1.65 1.65 0 0 0 1.82.33l.06-.06A2 2 0 1 1 21 6.27l-.06.06a1.65 1.65 0 0 0-.33 1.82v.09c.19.63.83 1 1.51 1H21a2 2 0 0 1 0 4h-.09c-.68 0-1.3.37-1.51 1z" stroke-width="0.6"/></svg>
+            <div class="label">Settings</div>
+          </div>
+        </nav>
+
+        <div class="collapse-toggle" id="collapseToggle" title="Toggle sidebar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="18" height="18"><path d="M3 12h18" stroke-width="1.6" stroke-linecap="round"/></svg>
+          <div class="small muted">Collapse</div>
+        </div>
+      </aside>
+
+      <!-- ========== MAIN AREA ========== -->
+      <main class="main">
+        <!-- Top bar: search + profile -->
+        <div class="topbar">
+          <div class="search-area">
+            <div class="search" role="search" aria-label="Search bookings">
+              <svg viewBox="0 0 24 24" width="18" height="18"><path d="M21 21l-6-6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <input id="searchInput" placeholder="Search bookings, clients, helpers..." />
+            </div>
+          </div>
+
+          <div class="profile">
+            <div class="small muted">Today • <span id="todayDate"></span></div>
+
+            <div class="profile-dropdown">
+              <div class="avatar" id="profileAvatar" title="Open profile menu">DR</div>
+              <div class="dropdown-menu" id="profileMenu" role="menu" aria-hidden="true">
+                <button id="profileBtn">Profile</button>
+                <button id="settingsBtn">Settings</button>
+                <button id="logoutBtn">Logout</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Header / Greeting -->
+        <div class="header">
+          <div class="greeting">
+            <div class="hi">Welcome, <span id="usernameDisplay">Anurag Prasad</span> 👋</div>
+            <div class="sub">Here’s what’s happening with your services today.</div>
+          </div>
+
+          <div class="right flex">
+            <!-- Dark mode toggle (optional) -->
+            <div class="flex small muted" title="Toggle dark mode (optional)">
+              <label for="darkToggle" class="small muted">Dark</label>
+              <input type="checkbox" id="darkToggle" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Metrics Cards -->
+        <div class="cards" id="metrics">
+          <div class="card">
+            <div class="meta">
+              <div class="icon">📅</div>
+              <div>
+                <div class="title">Total Bookings</div>
+                <div class="value" id="totalBookings">1,245</div>
+              </div>
+            </div>
+            <div>
+              <div class="small muted">Monthly target</div>
+              <div class="progress" aria-hidden="true"><i style="width:72%"></i></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="meta">
+              <div class="icon">🧑‍🔧</div>
+              <div>
+                <div class="title">Active Helpers</div>
+                <div class="value" id="activeHelpers">312</div>
+              </div>
+            </div>
+            <div>
+              <div class="small muted">Online right now</div>
+              <div class="progress"><i style="width:48%"></i></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="meta">
+              <div class="icon">💳</div>
+              <div>
+                <div class="title">Pending Payments</div>
+                <div class="value" id="pendingPayments">42</div>
+              </div>
+            </div>
+            <div>
+              <div class="small muted">Due this month</div>
+              <div class="progress"><i style="width:24%"></i></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="meta">
+              <div class="icon">⭐</div>
+              <div>
+                <div class="title">Client Satisfaction</div>
+                <div class="value" id="clientSat">89%</div>
+              </div>
+            </div>
+            <div>
+              <div class="small muted">Avg. rating</div>
+              <div class="progress"><i style="width:89%"></i></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Charts and recent activity -->
+        <div class="lower">
+          <div class="panel">
+            <h3>Booking Trends</h3>
+            <div style="display:flex; gap:12px; align-items:center;">
+              <canvas id="bookingsBar" style="max-height:260px; width:100%"></canvas>
+            </div>
+
+            <hr style="margin:14px 0; border:none; border-top:1px solid #eef3fb" />
+            <h3 style="margin-top:6px">Service Distribution</h3>
+            <div style="display:flex; gap:12px; align-items:center;">
+              <canvas id="servicePie" style="max-width:320px; height:200px"></canvas>
+              <div style="flex:1">
+                <ul id="serviceLegend" style="list-style:none; padding-left:0; margin-top:8px"></ul>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <h3>Recent Activity</h3>
+            <table aria-label="Recent bookings">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Client</th>
+                  <th>Helper</th>
+                  <th>Service Type</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="recentRows">
+                <!-- JS will populate 5 rows of dummy data -->
+              </tbody>
+            </table>
+
+            <div style="display:flex; gap:8px; justify-content:space-between; margin-top:12px; align-items:center">
+              <div class="small muted">Showing last 5 bookings</div>
+              <button style="background:var(--primary); color:white; border:0; padding:8px 12px; border-radius:8px; cursor:pointer">View all</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer area (small) -->
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-top:4px">
+          <div class="small muted">© <span id="yearNow"></span> Helpsters4U</div>
+          <div class="small muted">Made with ❤️</div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- =======================
+       JavaScript (internal)
+       ======================= -->
+  <script>
+    /* -------------------------
+       Helper & DOM references
+       ------------------------- */
+    const sidebar = document.getElementById('sidebar');
+    const collapseToggle = document.getElementById('collapseToggle');
+    const navItems = document.querySelectorAll('.nav .item');
+    const profileAvatar = document.getElementById('profileAvatar');
+    const profileMenu = document.getElementById('profileMenu');
+    const todayDate = document.getElementById('todayDate');
+    const usernameDisplay = document.getElementById('usernameDisplay');
+    const yearNow = document.getElementById('yearNow');
+    const searchInput = document.getElementById('searchInput');
+    const darkToggle = document.getElementById('darkToggle');
+
+    // Set date & year
+    const now = new Date();
+    todayDate.textContent = now.toLocaleDateString();
+    yearNow.textContent = now.getFullYear();
+
+    // ========== Sidebar collapse toggle (smooth animation) ==========
+    collapseToggle.addEventListener('click', () => {
+      sidebar.classList.toggle('collapsed');
+      // simple animation: rotate the toggle icon a little
+      collapseToggle.animate([{ transform: 'translateY(0)' }, { transform: 'translateY(-3px)' }, { transform: 'translateY(0)' }], { duration: 250 });
+    });
+
+    // ========== Navigation active state ==========
+    navItems.forEach(item=>{
+      item.addEventListener('click', () => {
+        document.querySelector('.nav .item.active')?.classList.remove('active');
+        item.classList.add('active');
+        // simple content switch animation - (here we just highlight)
+        item.animate([{ transform: 'translateX(-6px)' }, { transform: 'translateX(0)' }], { duration: 300 });
+      });
+    });
+
+    // ========== Profile dropdown ==========
+    profileAvatar.addEventListener('click', (e) => {
+      profileMenu.classList.toggle('show');
+    });
+
+    window.addEventListener('click', (e) => {
+      if (!profileMenu.contains(e.target) && e.target !== profileAvatar) {
+        profileMenu.classList.remove('show');
+      }
+    });
+
+    // Profile buttons (dummy behaviors)
+    document.getElementById('profileBtn').addEventListener('click', ()=> alert('Go to profile (placeholder)'));
+    document.getElementById('settingsBtn').addEventListener('click', ()=> alert('Go to settings (placeholder)'));
+    document.getElementById('logoutBtn').addEventListener('click', ()=> alert('Logged out (placeholder)'));
+
+    // ========== Dark Mode (optional) ==========
+    darkToggle.addEventListener('change', (e) => {
+      if (e.target.checked) {
+        document.documentElement.style.setProperty('--bg', '#0b1220');
+        document.documentElement.style.setProperty('--card', '#0e1622');
+        document.documentElement.style.setProperty('--muted', '#98a0b3');
+        document.documentElement.style.setProperty('--primary', '#7aa2ff');
+        document.body.style.color = '#eaf0ff';
+      } else {
+        // reset to defaults (keep same variable names used above)
+        document.documentElement.style.setProperty('--bg', '#ffffff');
+        document.documentElement.style.setProperty('--card', '#f8fafc');
+        document.documentElement.style.setProperty('--muted', '#64748b');
+        document.documentElement.style.setProperty('--primary', '#0f62fe');
+        document.body.style.color = '#0b1220';
+      }
+    });
+
+    // ========== Dummy data (customize here) ==========
+    const DUMMY = {
+      username: "Anurag Prasad",
+      metrics: {
+        totalBookings: 1245,
+        activeHelpers: 312,
+        pendingPayments: 42,
+        clientSatisfaction: 89
+      },
+      monthlyBookings: {
+        labels: ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],
+        data: [80, 120, 150, 170, 200, 220, 190, 210, 240, 260, 280, 320]
+      },
+      serviceDistribution: {
+        labels: ["Cleaning","Plumbing","Electrical","Carpentry","Others"],
+        data: [35, 20, 18, 12, 15]
+      },
+      recentBookings: [
+        {date:"2025-11-12", client:"Ritika Sharma", helper:"Sunil Kumar", service:"Cleaning", status:"Completed"},
+        {date:"2025-11-12", client:"Ramesh Patel", helper:"Kavita Singh", service:"Plumbing", status:"Pending"},
+        {date:"2025-11-11", client:"Mina Das", helper:"Ajay Verma", service:"Electrical", status:"Completed"},
+        {date:"2025-11-10", client:"Arjun Rao", helper:"Pooja B", service:"Carpentry", status:"Cancelled"},
+        {date:"2025-11-09", client:"Sonal Khanna", helper:"Ravi T", service:"Cleaning", status:"Pending"},
+      ]
+    };
+
+    // Populate username & metrics
+    usernameDisplay.textContent = DUMMY.username;
+    document.getElementById('totalBookings').textContent = DUMMY.metrics.totalBookings.toLocaleString();
+    document.getElementById('activeHelpers').textContent = DUMMY.metrics.activeHelpers;
+    document.getElementById('pendingPayments').textContent = DUMMY.metrics.pendingPayments;
+    document.getElementById('clientSat').textContent = DUMMY.metrics.clientSatisfaction + '%';
+
+    // Populate recent activity table
+    const recentRows = document.getElementById('recentRows');
+    recentRows.innerHTML = ''; // clear
+    DUMMY.recentBookings.slice(0,5).forEach(item => {
+      const tr = document.createElement('tr');
+
+      const statusClass = item.status.toLowerCase() === 'completed' ? 'success' : (item.status.toLowerCase() === 'pending' ? 'pending' : 'cancel');
+
+      tr.innerHTML = `
+        <td>${item.date}</td>
+        <td>${item.client}</td>
+        <td>${item.helper}</td>
+        <td>${item.service}</td>
+        <td><span class="badge ${statusClass}">${item.status}</span></td>
+      `;
+      recentRows.appendChild(tr);
+    });
+
+    // ========== Charts (using Chart.js) ==========
+    // Bar chart - monthly bookings
+    const ctxBar = document.getElementById('bookingsBar').getContext('2d');
+    const bookingsBar = new Chart(ctxBar, {
+      type: 'bar',
+      data: {
+        labels: DUMMY.monthlyBookings.labels,
+        datasets: [{
+          label: 'Bookings',
+          data: DUMMY.monthlyBookings.data,
+          borderRadius: 8,
+          barThickness: 18,
+          backgroundColor: Array.from({length: DUMMY.monthlyBookings.data.length}, (_,i) => {
+            // gradient-ish color effect: primary -> accent
+            return i % 2 === 0 ? 'rgba(15,98,254,0.9)' : 'rgba(6,182,212,0.9)';
+          })
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display:false },
+          tooltip: { mode: 'index', intersect: false }
+        },
+        scales: {
+          x: {
+            grid: { display:false },
+            ticks: { color: getComputedStyle(document.documentElement).getPropertyValue('--muted').trim() || '#64748b' }
+          },
+          y: {
+            ticks: { color: getComputedStyle(document.documentElement).getPropertyValue('--muted').trim() || '#64748b' },
+            beginAtZero: true
+          }
+        }
+      }
+    });
+
+    // Pie chart - service type distribution
+    const ctxPie = document.getElementById('servicePie').getContext('2d');
+    const pieColors = ['#0f62fe','#06b6d4','#7dd3fc','#60a5fa','#c7f9fb'];
+    const servicePie = new Chart(ctxPie, {
+      type: 'pie',
+      data: {
+        labels: DUMMY.serviceDistribution.labels,
+        datasets: [{
+          data: DUMMY.serviceDistribution.data,
+          backgroundColor: pieColors
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display:false },
+          tooltip: { callbacks: {} }
+        }
+      }
+    });
+
+    // Simple legend for pie
+    const legendWrap = document.getElementById('serviceLegend');
+    DUMMY.serviceDistribution.labels.forEach((label, i) => {
+      const li = document.createElement('li');
+      li.innerHTML = `<div style="display:flex;align-items:center; gap:8px; margin-bottom:8px">
+                        <div style="width:12px; height:12px; border-radius:3px; background:${pieColors[i]}"></div>
+                        <div><strong>${label}</strong><div class="small muted">${DUMMY.serviceDistribution.data[i]}%</div></div>
+                      </div>`;
+      legendWrap.appendChild(li);
+    });
+
+    // ========== Small UX: Search filter (client-side, simplistic) ==========
+    searchInput.addEventListener('input', (e) => {
+      const q = e.target.value.trim().toLowerCase();
+      const rows = recentRows.querySelectorAll('tr');
+      rows.forEach(r => {
+        const text = r.textContent.toLowerCase();
+        r.style.display = q === '' || text.includes(q) ? '' : 'none';
+      });
+    });
+
+    // Accessibility: close menu on Esc
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        profileMenu.classList.remove('show');
+      }
+    });
+
+    // ========== Small touch: animate metric progress bars on load ==========
+    window.addEventListener('load', () => {
+      document.querySelectorAll('.progress i').forEach((el, idx) => {
+        const initial = el.style.width || '10%';
+        el.style.width = '6%';
+        setTimeout(()=> el.style.width = initial, 200 + idx * 100);
+      });
+    });
+
+    /* ============================
+       Notes & Customization
+       ============================
+       - To change colors: edit :root CSS variables --primary, --accent, --muted.
+       - To change fonts: update Google Fonts link at top.
+       - To replace Chart.js with a pure HTML/CSS mock, remove Chart.js parts and update canvases to static SVGs.
+       - To feed real data: replace DUMMY object with data fetched from your API and call chart.update() after updating datasets.
+       - Sidebar: when .collapsed class is present it becomes icon-only. You can persist collapsed state via localStorage if desired.
+       - Profile menu actions are placeholder alerts — wire them to real routes / modals as needed.
+    */
+  </script>
+</body>
+</html>

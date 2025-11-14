@@ -1,0 +1,25 @@
+# create .gitignore
+@"
+# Node / PHP / env
+.env
+env.development
+.env.local
+.env.*.local
+
+# editor / OS
+.vscode/
+.idea/
+*.log
+.DS_Store
+
+# vendor / node modules
+node_modules/
+vendor/
+"@ > .gitignore
+
+# create an example env file (safe placeholder)
+@"
+# copy this to .env and fill with secrets locally, do NOT commit .env
+AWS_ACCESS_KEY_ID=your_aws_access_key_here
+AWS_SECRET_ACCESS_KEY=your_aws_secret_here
+"@ > .env.example

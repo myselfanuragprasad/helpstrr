@@ -1,0 +1,78 @@
+<?php
+
+use App\Models\User;
+use Illuminate\Support\Facades\Route;
+use App\Notifications\BrowserNotification;
+use App\Http\Controllers\TemplateController;
+use NotificationChannels\WebPush\WebPushMessage;
+use NotificationChannels\WebPush\PushSubscription;
+use App\Http\Controllers\Referral\ReferralController;
+use App\Http\Controllers\NotificationDetailController;
+use App\Http\Controllers\SP\AUTH\SPRegisterController;
+
+
+// Route::get('/', function () {
+//     return view('welcome');
+// });
+
+Route::get('/signup-worker-form', [SPRegisterController::class, 'viewRegisterForm'])->name('signup.page');
+Route::get('/service-provider', [SPRegisterController::class, 'ViewSPWelcomePage'])->name('spwelcome.page');
+
+Route::get('/', [SPRegisterController::class, 'homePage'])->name('sphome.page');
+Route::get('/referral/registration', [ReferralController::class, 'showRegistrationForm'])->name('referralsignup.page');
+
+Route::prefix('sp')->group(function () {
+    Route::post('/send-otp', [SPRegisterController::class, 'sendOtpAjax']);       // send OTP
+    Route::post('/verify-otp', [SPRegisterController::class, 'verifyOtpAjax']);   // verify OTP
+    Route::post('/form-details', [SPRegisterController::class, 'formDetailsAjax']); // fetch SP details
+    Route::post('/save-details', [SPRegisterController::class, 'saveSpDetailsAjax']); // save SP details
+    Route::get('/roles', [SPRegisterController::class, 'getRolesAjax']);          // fetch roles
+});
+
+Route::get('/notify', function () {
+    return view('notify'); // loads notify.blade.php
+})->name('notify');
+
+Route::get('/send-notification', function () {
+    $subscriptions = PushSubscription::all();
+
+    foreach ($subscriptions as $subscription) {
+        $subscription->sendNotification(
+            (new WebPushMessage)
+                ->title('Hello Guest!')
+                ->body('This is a test notification for guest users.')
+                ->icon('/icon.png')
+                ->data(['url' => url('/notify')])
+        );
+    }
+
+    return 'Notifications sent to all guests!';
+});
+
+Route::match(['get', 'post'], '/subscribe', function (Request $request) {
+    $user = auth()->user(); // pick logged-in user
+    $user->updatePushSubscription(
+        $request->endpoint,
+        $request->key,
+        $request->token,
+        $request->contentEncoding
+    );
+    return response()->json(['success' => true]);
+});
+
+Route::match(['get', 'post'], 'aws-file/', [SPRegisterController::class, 'showListedFiles']);
+
+Route::get('aws/file/{value}', [SPRegisterController::class, 'getAWSFile'])->where('value', '.*')->name('awsfile.show');
+
+Route::post('sp/referral', [ReferralController::class, 'store']);
+
+
+Route::get('/get-templates/{type}', [TemplateController::class, 'getTemplatesByType']);
+Route::get('/get-template/{id}', [TemplateController::class, 'getTemplateById']);
+
+Route::post('/send-notification', [NotificationDetailController::class, 'sendNotification'])
+    ->name('notifications.send');
+
+Route::get('/debug/utm-check', function () {
+    return \App\Models\UtmTracking::latest()->take(5)->get();
+});
