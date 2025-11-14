@@ -13,9 +13,7 @@ use App\Http\Controllers\Api\v1\SP\SPAuthController;
 use App\Http\Controllers\Api\v1\UserTokenController;
 use App\Http\Controllers\PushSubscriptionController;
 use App\Http\Controllers\Api\v1\SP\SPDetailController;
-use App\Http\Controllers\Api\v1\Customer\CustomerAuthController;
-use App\Http\Controllers\Api\v1\Customer\CustomerDetailController;
-use App\Http\Controllers\Api\v1\Customer\CustomerController;
+
 use NotificationChannels\WebPush\PushSubscription as WebPushSubscription;
 
 Route::get('/user', function (Request $request) {
@@ -34,28 +32,7 @@ Route::prefix('v1')->group(function () {
         Route::post('profile', [SPDetailController::class, 'saveSPDetails'])->name('sp.savedetails');
     });
 
-    // === Customer Routes ===
-    Route::prefix('customer')->group(function () {
-        // Authentication routes
-        Route::post('signup', [CustomerAuthController::class, 'signup'])->name('customer.register');
-        
-        // Profile management routes (existing)
-        Route::get('profile', [CustomerDetailController::class, 'getCustomerDetails'])->name('customer.getdetails');
-        Route::post('profile', [CustomerDetailController::class, 'saveCustomerDetails'])->name('customer.savedetails');
-        
-        // CRUD routes for customer management
-        Route::get('/', [CustomerController::class, 'index'])->name('customers.index');
-        Route::post('/', [CustomerController::class, 'store'])->name('customers.store');
-        Route::get('/{id}', [CustomerController::class, 'show'])->name('customers.show');
-        Route::put('/{id}', [CustomerController::class, 'update'])->name('customers.update');
-        Route::patch('/{id}', [CustomerController::class, 'update'])->name('customers.patch');
-        Route::delete('/{id}', [CustomerController::class, 'destroy'])->name('customers.destroy');
-        
-        // Additional customer management routes
-        Route::patch('/{id}/toggle-status', [CustomerController::class, 'toggleStatus'])->name('customers.toggle-status');
-        Route::get('/statistics/overview', [CustomerController::class, 'statistics'])->name('customers.statistics');
-        Route::post('/bulk-action', [CustomerController::class, 'bulkAction'])->name('customers.bulk-action');
-    });
+
 
 
     // === Location Routes ===

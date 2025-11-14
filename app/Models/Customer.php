@@ -91,6 +91,22 @@ class Customer extends Authenticatable implements HasAvatar, HasName
     }
 
     /**
+     * Scope to filter customers with avatars
+     */
+    public function scopeWithAvatar($query)
+    {
+        return $query->whereNotNull('avatar_url');
+    }
+
+    /**
+     * Scope to filter customers without avatars
+     */
+    public function scopeWithoutAvatar($query)
+    {
+        return $query->whereNull('avatar_url');
+    }
+
+    /**
      * Update last login timestamp
      */
     public function updateLastLogin()
@@ -113,6 +129,30 @@ class Customer extends Authenticatable implements HasAvatar, HasName
     public function getRegistrationAgeAttribute()
     {
         return $this->created_at->diffInDays(now());
+    }
+
+    /**
+     * Get registration days ago as computed attribute
+     */
+    public function getRegistrationDaysAgoAttribute()
+    {
+        return $this->created_at->diffInDays(now());
+    }
+
+    /**
+     * Check if customer has phone
+     */
+    public function getHasPhoneAttribute()
+    {
+        return !empty($this->phone);
+    }
+
+    /**
+     * Check if customer has avatar
+     */
+    public function getHasAvatarAttribute()
+    {
+        return !empty($this->avatar_url);
     }
 
     /**

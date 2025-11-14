@@ -4,6 +4,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Route;
 use App\Notifications\BrowserNotification;
 use App\Http\Controllers\TemplateController;
+use App\Http\Controllers\CustomerController;
 use NotificationChannels\WebPush\WebPushMessage;
 use NotificationChannels\WebPush\PushSubscription;
 use App\Http\Controllers\Referral\ReferralController;
@@ -75,4 +76,17 @@ Route::post('/send-notification', [NotificationDetailController::class, 'sendNot
 
 Route::get('/debug/utm-check', function () {
     return \App\Models\UtmTracking::latest()->take(5)->get();
+});
+
+// Customer Management Routes
+Route::prefix('customers')->name('customers.')->group(function () {
+    Route::get('/', [CustomerController::class, 'index'])->name('index');
+    Route::post('/', [CustomerController::class, 'store'])->name('store');
+    Route::get('/statistics', [CustomerController::class, 'statistics'])->name('statistics');
+    Route::post('/bulk-action', [CustomerController::class, 'bulkAction'])->name('bulk-action');
+    Route::get('/{customer}', [CustomerController::class, 'show'])->name('show');
+    Route::put('/{customer}', [CustomerController::class, 'update'])->name('update');
+    Route::patch('/{customer}', [CustomerController::class, 'update'])->name('patch');
+    Route::delete('/{customer}', [CustomerController::class, 'destroy'])->name('destroy');
+    Route::patch('/{customer}/toggle-status', [CustomerController::class, 'toggleStatus'])->name('toggle-status');
 });
