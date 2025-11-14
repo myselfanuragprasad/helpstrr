@@ -2,29 +2,30 @@
 
 namespace App\Filament\Admin\Resources;
 
-use App\Models\Customer;
-use App\Filament\Admin\Resources\CustomerResource\Pages\CreateCustomer;
-use App\Filament\Admin\Resources\CustomerResource\Pages\EditCustomer;
-use App\Filament\Admin\Resources\CustomerResource\Pages\ListCustomers;
-use App\Filament\Admin\Resources\CustomerResource\Pages\ViewCustomer;
 use Filament\Tables;
+use App\Models\Customer;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
 use Filament\Infolists\Infolist;
 use Filament\Resources\Resource;
 use Filament\Tables\Actions\Action;
+use Illuminate\Support\Facades\Hash;
+use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\Section;
 use Filament\Support\Enums\FontWeight;
+use Filament\Tables\Actions\BulkAction;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Toggle;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
+use Filament\Infolists\Components\IconEntry;
 use Filament\Infolists\Components\TextEntry;
-use Filament\Infolists\Components\BooleanEntry;
-use Filament\Tables\Actions\BulkAction;
-use Filament\Infolists\Components\Section as InfolistSection;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Support\Facades\Hash;
+use Filament\Infolists\Components\BooleanEntry;
+use Filament\Infolists\Components\Section as InfolistSection;
+use App\Filament\Admin\Resources\CustomerResource\Pages\EditCustomer;
+use App\Filament\Admin\Resources\CustomerResource\Pages\ViewCustomer;
+use App\Filament\Admin\Resources\CustomerResource\Pages\ListCustomers;
+use App\Filament\Admin\Resources\CustomerResource\Pages\CreateCustomer;
 
 class CustomerResource extends Resource
 {
@@ -57,10 +58,10 @@ class CustomerResource extends Resource
                             ->placeholder('Enter customer phone number'),
                         TextInput::make('password')
                             ->password()
-                            ->required(fn (string $context): bool => $context === 'create')
+                            ->required(fn(string $context): bool => $context === 'create')
                             ->minLength(8)
-                            ->dehydrateStateUsing(fn ($state) => Hash::make($state))
-                            ->dehydrated(fn ($state) => filled($state))
+                            ->dehydrateStateUsing(fn($state) => Hash::make($state))
+                            ->dehydrated(fn($state) => filled($state))
                             ->placeholder('Enter customer password'),
                         TextInput::make('avatar_url')
                             ->url()
@@ -93,7 +94,7 @@ class CustomerResource extends Resource
                     Tables\Columns\TextColumn::make('name')
                         ->searchable()
                         ->weight(FontWeight::Bold)
-                        ->description(fn (Customer $record): string => $record->email),
+                        ->description(fn(Customer $record): string => $record->email),
                     Tables\Columns\Layout\Stack::make([
                         Tables\Columns\TextColumn::make('phone')
                             ->searchable()
@@ -141,15 +142,16 @@ class CustomerResource extends Resource
                 Tables\Actions\EditAction::make(),
                 Action::make('toggle_status')
                     ->label('Toggle Status')
-                    ->icon(fn (Customer $record) => $record->is_active ? 'heroicon-o-x-circle' : 'heroicon-o-check-circle')
-                    ->color(fn (Customer $record) => $record->is_active ? 'danger' : 'success')
+                    ->icon(fn(Customer $record) => $record->is_active ? 'heroicon-o-x-circle' : 'heroicon-o-check-circle')
+                    ->color(fn(Customer $record) => $record->is_active ? 'danger' : 'success')
                     ->action(function (Customer $record) {
                         $record->update(['is_active' => !$record->is_active]);
                     })
                     ->requiresConfirmation()
-                    ->modalDescription(fn (Customer $record) => 
-                        $record->is_active 
-                            ? 'This will deactivate the customer account.' 
+                    ->modalDescription(
+                        fn(Customer $record) =>
+                        $record->is_active
+                            ? 'This will deactivate the customer account.'
                             : 'This will activate the customer account.'
                     ),
                 Tables\Actions\DeleteAction::make(),
@@ -161,7 +163,7 @@ class CustomerResource extends Resource
                         ->icon('heroicon-o-check-circle')
                         ->color('success')
                         ->action(function (Collection $records) {
-                            $records->each(fn (Customer $record) => $record->update(['is_active' => true]));
+                            $records->each(fn(Customer $record) => $record->update(['is_active' => true]));
                         })
                         ->requiresConfirmation()
                         ->modalDescription('This will activate all selected customers.'),
@@ -170,7 +172,7 @@ class CustomerResource extends Resource
                         ->icon('heroicon-o-x-circle')
                         ->color('danger')
                         ->action(function (Collection $records) {
-                            $records->each(fn (Customer $record) => $record->update(['is_active' => false]));
+                            $records->each(fn(Customer $record) => $record->update(['is_active' => false]));
                         })
                         ->requiresConfirmation()
                         ->modalDescription('This will deactivate all selected customers.'),
@@ -212,11 +214,14 @@ class CustomerResource extends Resource
                             ->label('Phone Number')
                             ->icon('heroicon-o-phone')
                             ->placeholder('No phone number'),
-                        BooleanEntry::make('is_active')
+                        // replacement
+                        IconEntry::make('is_active')
                             ->label('Status')
-                            ->trueColor('success')
-                            ->falseColor('danger')
-                            ->formatStateUsing(fn (bool $state): string => $state ? 'Active' : 'Inactive'),
+                            ->boolean() // renders check/cross based on boolean value
+                            ->trueIcon('heroicon-o-check-circle')   // optional
+                            ->falseIcon('heroicon-o-x-circle')     // optional
+                            ->trueColor('success')                  // optional
+                            ->falseColor('danger'),
                         TextEntry::make('created_at')
                             ->label('Registration Date')
                             ->dateTime(),
@@ -229,17 +234,18 @@ class CustomerResource extends Resource
                     ->schema([
                         TextEntry::make('registration_days_ago')
                             ->label('Days Since Registration')
-                            ->getStateUsing(fn (Customer $record): string => 
+                            ->getStateUsing(
+                                fn(Customer $record): string =>
                                 number_format($record->registration_days_ago, 1) . ' days'
                             ),
                         TextEntry::make('has_phone')
                             ->label('Phone Provided')
-                            ->getStateUsing(fn (Customer $record): string => $record->has_phone ? 'Yes' : 'No')
-                            ->color(fn (Customer $record) => $record->has_phone ? 'success' : 'gray'),
+                            ->getStateUsing(fn(Customer $record): string => $record->has_phone ? 'Yes' : 'No')
+                            ->color(fn(Customer $record) => $record->has_phone ? 'success' : 'gray'),
                         TextEntry::make('has_avatar')
                             ->label('Avatar Set')
-                            ->getStateUsing(fn (Customer $record): string => $record->has_avatar ? 'Yes' : 'No')
-                            ->color(fn (Customer $record) => $record->has_avatar ? 'success' : 'gray'),
+                            ->getStateUsing(fn(Customer $record): string => $record->has_avatar ? 'Yes' : 'No')
+                            ->color(fn(Customer $record) => $record->has_avatar ? 'success' : 'gray'),
                     ])
                     ->columns(3),
             ]);
