@@ -22,12 +22,13 @@ class Customer extends Authenticatable implements HasAvatar, HasName
         'is_active',
         'token',
         'avatar_url',
-        'token',
         'last_login',
     ];
 
     protected $hidden = [
         'password',
+        'remember_token',
+        'token',
     ];
 
     protected $casts = [
@@ -43,6 +44,127 @@ class Customer extends Authenticatable implements HasAvatar, HasName
     public function getFilamentName(): string
     {
         return $this->name ?? $this->email;
+    }
+
+    /**
+     * Scope to filter active customers
+     */
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
+    }
+
+    /**
+     * Scope to filter inactive customers
+     */
+    public function scopeInactive($query)
+    {
+        return $query->where('is_active', false);
+    }
+
+    /**
+     * Scope to search customers by name, email, or phone
+     */
+    public function scopeSearch($query, $search)
+    {
+        return $query->where(function ($q) use ($search) {
+            $q->where('name', 'like', "%{$search}%")
+              ->orWhere('email', 'like', "%{$search}%")
+              ->orWhere('phone', 'like', "%{$search}%");
+        });
+    }
+
+    /**
+     * Scope to filter customers with phone numbers
+     */
+    public function scopeWithPhone($query)
+    {
+        return $query->whereNotNull('phone');
+    }
+
+    /**
+     * Scope to filter customers without phone numbers
+     */
+    public function scopeWithoutPhone($query)
+    {
+        return $query->whereNull('phone');
+    }
+
+    /**
+     * Update last login timestamp
+     */
+    public function updateLastLogin()
+    {
+        $this->update(['last_login' => now()]);
+        return $this;
+    }
+
+    /**
+     * Check if customer has been active recently
+     */
+    public function isRecentlyActive($days = 30)
+    {
+        return $this->last_login && $this->last_login->isAfter(now()->subDays($days));
+    }
+
+    /**
+     * Get customer's registration age in days
+     */
+    public function getRegistrationAgeAttribute()
+    {
+        return $this->created_at->diffInDays(now());
+    }
+
+    /**
+     * Check if customer has complete profile
+     */
+    public function hasCompleteProfile()
+    {
+        return !empty($this->name) && !empty($this->email) && !empty($this->phone);
+    }
+
+    /**
+     * Generate a new API token for the customer
+     */
+    public function generateApiToken($tokenName = 'auth_token')
+    {
+        // Revoke existing tokens
+        $this->tokens()->delete();
+        
+        // Create new token
+        $token = $this->createToken($tokenName)->plainTextToken;
+        
+        // Update token field
+        $this->update(['token' => $token]);
+        
+        return $token;
+    }
+
+    /**
+     * Activate the customer
+     */
+    public function activate()
+    {
+        $this->update(['is_active' => true]);
+        return $this;
+    }
+
+    /**
+     * Deactivate the customer
+     */
+    public function deactivate()
+    {
+        $this->update(['is_active' => false]);
+        return $this;
+    }
+
+    /**
+     * Toggle customer active status
+     */
+    public function toggleStatus()
+    {
+        $this->update(['is_active' => !$this->is_active]);
+        return $this;
     }
 
     public static function handleSignup($data)
