@@ -90,3 +90,18 @@ Route::prefix('customers')->name('customers.')->group(function () {
     Route::delete('/{customer}', [CustomerController::class, 'destroy'])->name('destroy');
     Route::patch('/{customer}/toggle-status', [CustomerController::class, 'toggleStatus'])->name('toggle-status');
 });
+
+// Service Provider Management Routes
+Route::prefix('service-providers')->name('service-providers.')->group(function () {
+    Route::get('/', [App\Http\Controllers\ServiceProviderController::class, 'index'])->name('index');
+    Route::get('/create', [App\Http\Controllers\ServiceProviderController::class, 'create'])->name('create');
+    Route::post('/', [App\Http\Controllers\ServiceProviderController::class, 'store'])->name('store');
+    Route::get('/statistics', [App\Http\Controllers\ServiceProviderController::class, 'statistics'])->name('statistics');
+    Route::post('/bulk-action', [App\Http\Controllers\ServiceProviderController::class, 'bulkAction'])->name('bulk-action');
+    Route::get('/{serviceProvider}', [App\Http\Controllers\ServiceProviderController::class, 'show'])->name('show');
+    Route::get('/{serviceProvider}/edit', [App\Http\Controllers\ServiceProviderController::class, 'edit'])->name('edit');
+    Route::put('/{serviceProvider}', [App\Http\Controllers\ServiceProviderController::class, 'update'])->name('update');
+    Route::patch('/{serviceProvider}', [App\Http\Controllers\ServiceProviderController::class, 'update'])->name('patch');
+    Route::delete('/{serviceProvider}', [App\Http\Controllers\ServiceProviderController::class, 'destroy'])->name('destroy');
+    Route::patch('/{serviceProvider}/toggle-status', [App\Http\Controllers\ServiceProviderController::class, 'toggleStatus'])->name('toggle-status');
+});
