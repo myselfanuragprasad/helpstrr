@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up()
     {
+        if (!Schema::hasTable('scheduled_notifications')) {
         Schema::create('scheduled_notifications', function (Blueprint $table) {
             $table->id();
             $table->string('title'); // subject/title
@@ -22,6 +23,7 @@ return new class extends Migration {
             $table->timestamps();
         });
     }
+}
 
     public function down()
     {

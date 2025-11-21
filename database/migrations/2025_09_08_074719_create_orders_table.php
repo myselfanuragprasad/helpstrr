@@ -11,6 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (!Schema::hasTable('orders')) {
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
             $table->foreignId('sp_user_id')->nullable()->constrained('s_p_users'); // link to service provider
@@ -20,6 +21,7 @@ return new class extends Migration
             $table->timestamps();
         });
     }
+}
 
     /**
      * Reverse the migrations.

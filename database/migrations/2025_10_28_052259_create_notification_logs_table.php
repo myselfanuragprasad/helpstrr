@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up()
     {
+        if (!Schema::hasTable('notification_logs')) {
         Schema::create('notification_logs', function (Blueprint $table) {
             $table->id();
             $table->foreignId('scheduled_notification_id')->constrained()->onDelete('cascade');
@@ -18,6 +19,7 @@ return new class extends Migration {
             $table->timestamps();
         });
     }
+}
 
     public function down()
     {

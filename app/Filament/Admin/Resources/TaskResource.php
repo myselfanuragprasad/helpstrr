@@ -43,21 +43,21 @@ class TaskResource extends Resource
                             ->label('Task Number')
                             ->disabled()
                             ->dehydrated(false),
-                        
+
                         Forms\Components\Select::make('customer_id')
                             ->label('Customer')
                             ->relationship('customer', 'name')
                             ->searchable()
                             ->preload()
                             ->required(),
-                        
+
                         Forms\Components\Select::make('customer_address_id')
                             ->label('Service Address')
                             ->relationship('customerAddress', 'address_line_1')
                             ->searchable()
                             ->preload()
                             ->required(),
-                        
+
                         Forms\Components\Select::make('category_id')
                             ->label('Category')
                             ->relationship('category', 'name')
@@ -66,7 +66,7 @@ class TaskResource extends Resource
                             ->required()
                             ->reactive()
                             ->afterStateUpdated(fn (callable $set) => $set('subcategory_id', null)),
-                        
+
                         Forms\Components\Select::make('subcategory_id')
                             ->label('Subcategory')
                             ->options(function (callable $get) {
@@ -80,10 +80,10 @@ class TaskResource extends Resource
                             })
                             ->searchable()
                             ->required(),
-                        
+
                         Forms\Components\Select::make('service_provider_id')
                             ->label('Service Provider')
-                            ->relationship('serviceProvider.spUser', 'name')
+                            ->relationship('serviceProvider.spUser', 'first_name')
                             ->searchable()
                             ->preload(),
                     ])
@@ -96,25 +96,25 @@ class TaskResource extends Resource
                             ->numeric()
                             ->minValue(1)
                             ->maxValue(50),
-                        
+
                         Forms\Components\TextInput::make('requested_hours')
                             ->label('Requested Hours')
                             ->numeric()
                             ->minValue(1)
                             ->maxValue(12)
                             ->required(),
-                        
+
                         Forms\Components\TextInput::make('billable_hours')
                             ->label('Billable Hours')
                             ->numeric()
                             ->disabled()
                             ->dehydrated(false),
-                        
+
                         Forms\Components\DateTimePicker::make('scheduled_at')
                             ->label('Scheduled Date & Time')
                             ->required()
                             ->minDate(now()->addHours(2)),
-                        
+
                         Forms\Components\Select::make('recurrence_type')
                             ->label('Recurrence')
                             ->options([
@@ -124,7 +124,7 @@ class TaskResource extends Resource
                             ])
                             ->default('one_time')
                             ->required(),
-                        
+
                         Forms\Components\Select::make('dietary_preference_id')
                             ->label('Dietary Preference')
                             ->relationship('dietaryPreference', 'name')
@@ -141,14 +141,14 @@ class TaskResource extends Resource
                             ->prefix('₹')
                             ->disabled()
                             ->dehydrated(false),
-                        
+
                         Forms\Components\TextInput::make('gst_amount')
                             ->label('GST Amount')
                             ->numeric()
                             ->prefix('₹')
                             ->disabled()
                             ->dehydrated(false),
-                        
+
                         Forms\Components\TextInput::make('final_amount')
                             ->label('Final Amount (Incl. GST)')
                             ->numeric()
@@ -164,7 +164,7 @@ class TaskResource extends Resource
                             ->label('Special Instructions')
                             ->rows(3)
                             ->columnSpanFull(),
-                        
+
                         Forms\Components\Select::make('status')
                             ->label('Status')
                             ->options([
@@ -182,7 +182,7 @@ class TaskResource extends Resource
                                 'cancelled' => 'Cancelled',
                             ])
                             ->required(),
-                        
+
                         Forms\Components\Toggle::make('is_active')
                             ->label('Active')
                             ->default(true),
@@ -199,28 +199,28 @@ class TaskResource extends Resource
                     ->label('Task #')
                     ->searchable()
                     ->sortable(),
-                
+
                 Tables\Columns\TextColumn::make('customer.name')
                     ->label('Customer')
                     ->searchable()
                     ->sortable(),
-                
+
                 Tables\Columns\TextColumn::make('category.name')
                     ->label('Category')
                     ->badge()
                     ->color('info'),
-                
+
                 Tables\Columns\TextColumn::make('subcategory.name')
                     ->label('Service')
                     ->searchable()
                     ->sortable(),
-                
-                Tables\Columns\TextColumn::make('serviceProvider.spUser.name')
+
+                Tables\Columns\TextColumn::make('serviceProvider.spUser.first_name')
                     ->label('Service Provider')
                     ->searchable()
                     ->sortable()
                     ->placeholder('Not Assigned'),
-                
+
                 Tables\Columns\TextColumn::make('status')
                     ->label('Status')
                     ->badge()
@@ -249,17 +249,17 @@ class TaskResource extends Resource
                         'cancelled' => 'Cancelled',
                         default => $state,
                     }),
-                
+
                 Tables\Columns\TextColumn::make('scheduled_at')
                     ->label('Scheduled')
                     ->dateTime('M j, Y g:i A')
                     ->sortable(),
-                
+
                 Tables\Columns\TextColumn::make('final_amount')
                     ->label('Amount')
                     ->money('INR')
                     ->sortable(),
-                
+
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Created')
                     ->dateTime('M j, Y g:i A')
@@ -282,14 +282,14 @@ class TaskResource extends Resource
                         'rated' => 'Rated',
                         'cancelled' => 'Cancelled',
                     ]),
-                
+
                 Tables\Filters\SelectFilter::make('category')
                     ->relationship('category', 'name'),
-                
+
                 Tables\Filters\Filter::make('scheduled_today')
                     ->label('Scheduled Today')
                     ->query(fn (Builder $query): Builder => $query->whereDate('scheduled_at', today())),
-                
+
                 Tables\Filters\Filter::make('created_today')
                     ->label('Created Today')
                     ->query(fn (Builder $query): Builder => $query->whereDate('created_at', today())),

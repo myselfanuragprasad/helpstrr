@@ -11,6 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
+         if (!Schema::hasTable('chef_cuisines')) {
         Schema::create('chef_cuisines', function (Blueprint $table) {
             $table->id();
             $table->string('name');
@@ -21,6 +22,7 @@ return new class extends Migration
             $table->timestamps();
         });
     }
+}
 
     /**
      * Reverse the migrations.

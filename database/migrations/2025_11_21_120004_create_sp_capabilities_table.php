@@ -11,6 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (!Schema::hasTable('sp_capabilities')) {
         Schema::create('sp_capabilities', function (Blueprint $table) {
             $table->id();
             $table->foreignId('service_provider_id')->constrained()->onDelete('cascade');
@@ -25,7 +26,7 @@ return new class extends Migration
             $table->unique(['service_provider_id', 'subcategory_id'], 'sp_subcategory_unique');
         });
     }
-
+    }
     /**
      * Reverse the migrations.
      */
