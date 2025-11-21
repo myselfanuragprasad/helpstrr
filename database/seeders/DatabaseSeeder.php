@@ -41,6 +41,12 @@ class DatabaseSeeder extends Seeder
                 TestUsersSeeder::class,
                 ShieldSeeder::class,
                 CitySeeder::class,
+                // New seeders for the helpstrr system
+                CategorySeeder::class,
+                SubcategorySeeder::class,
+                ChefCuisineSeeder::class,
+                DietaryPreferenceSeeder::class,
+                OptionalFlagSeeder::class,
             ]
         );
     }
