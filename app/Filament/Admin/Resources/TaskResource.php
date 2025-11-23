@@ -44,7 +44,7 @@ class TaskResource extends Resource
                             ->disabled()
                             ->dehydrated(false),
 
-                        Forms\Components\Select::make('customer_id')
+                        Forms\Components\Select::make('id')
                             ->label('Customer')
                             ->relationship('customer', 'name')
                             ->searchable()
