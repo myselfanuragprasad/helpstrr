@@ -11,7 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('sp_location_tracking', function (Blueprint $table) {
+        if (!Schema::hasTable('sp_location_tracking')) {
+            Schema::create('sp_location_tracking', function (Blueprint $table) {
             $table->id();
             $table->foreignId('service_provider_id')->constrained()->onDelete('cascade');
             $table->foreignId('task_id')->nullable()->constrained()->onDelete('set null');
@@ -39,6 +40,7 @@ return new class extends Migration
             $table->index(['task_id', 'recorded_at']);
             $table->index(['latitude', 'longitude']);
         });
+        }
     }
 
     /**

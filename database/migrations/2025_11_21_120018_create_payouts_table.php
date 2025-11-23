@@ -11,7 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('payouts', function (Blueprint $table) {
+        if (!Schema::hasTable('payouts')) {
+            Schema::create('payouts', function (Blueprint $table) {
             $table->id();
             $table->string('payout_number')->unique();
             $table->foreignId('service_provider_id')->constrained()->onDelete('cascade');
@@ -50,6 +51,7 @@ return new class extends Migration
             $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
+        }
     }
 
     /**

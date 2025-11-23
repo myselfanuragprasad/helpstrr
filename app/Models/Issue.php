@@ -13,8 +13,11 @@ class Issue extends Model
         'task_id',
         'customer_id',
         'service_provider_id',
+        'reporter_type',
+        'reporter_id',
         'reported_by',
         'issue_type',
+        'category',
         'title',
         'description',
         'attachments',
@@ -26,6 +29,8 @@ class Issue extends Model
         'compensation_amount',
         'compensation_type',
         'compensation_notes',
+        'refund_amount',
+        'refund_status',
         'is_active',
     ];
 
@@ -33,6 +38,7 @@ class Issue extends Model
         'attachments' => 'array',
         'resolved_at' => 'datetime',
         'compensation_amount' => 'decimal:2',
+        'refund_amount' => 'decimal:2',
         'is_active' => 'boolean',
     ];
 

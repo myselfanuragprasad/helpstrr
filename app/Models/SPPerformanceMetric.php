@@ -12,6 +12,9 @@ class SPPerformanceMetric extends Model
     protected $fillable = [
         'service_provider_id',
         'metric_date',
+        'total_tasks',
+        'completed_tasks',
+        'cancelled_tasks',
         'tasks_offered',
         'tasks_accepted',
         'tasks_completed',
@@ -21,10 +24,16 @@ class SPPerformanceMetric extends Model
         'average_rating',
         'total_ratings',
         'punctuality_score',
+        'quality_score',
+        'response_time_avg',
+        'complaints_count',
         'complaints_received',
         'total_earnings',
         'online_hours',
-        'badge_level'
+        'badge_level',
+        'badges',
+        'incentives',
+        'last_updated'
     ];
 
     protected $casts = [
@@ -32,7 +41,11 @@ class SPPerformanceMetric extends Model
         'acceptance_rate' => 'decimal:2',
         'completion_rate' => 'decimal:2',
         'average_rating' => 'decimal:2',
-        'total_earnings' => 'decimal:2'
+        'quality_score' => 'decimal:2',
+        'total_earnings' => 'decimal:2',
+        'badges' => 'array',
+        'incentives' => 'array',
+        'last_updated' => 'datetime'
     ];
 
     public function serviceProvider(): BelongsTo

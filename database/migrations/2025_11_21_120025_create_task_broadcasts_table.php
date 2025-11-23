@@ -11,7 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('task_broadcasts', function (Blueprint $table) {
+        if (!Schema::hasTable('task_broadcasts')) {
+            Schema::create('task_broadcasts', function (Blueprint $table) {
             $table->id();
             $table->foreignId('task_id')->constrained()->onDelete('cascade');
             $table->foreignId('service_provider_id')->constrained()->onDelete('cascade');
@@ -39,6 +40,7 @@ return new class extends Migration
             $table->index(['task_id', 'broadcast_round']);
             $table->index(['service_provider_id', 'sent_at']);
         });
+        }
     }
 
     /**

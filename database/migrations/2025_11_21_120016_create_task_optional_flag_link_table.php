@@ -11,7 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('task_optional_flag_link', function (Blueprint $table) {
+        if (!Schema::hasTable('task_optional_flag_link')) {
+            Schema::create('task_optional_flag_link', function (Blueprint $table) {
             $table->id();
             $table->foreignId('task_id')->constrained()->onDelete('cascade');
             $table->foreignId('optional_flag_id')->constrained()->onDelete('cascade');
@@ -19,6 +20,7 @@ return new class extends Migration
 
             $table->unique(['task_id', 'optional_flag_id']);
         });
+        }
     }
 
     /**

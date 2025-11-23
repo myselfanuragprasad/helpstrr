@@ -11,7 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('sp_dietary_capabilities', function (Blueprint $table) {
+        if (!Schema::hasTable('sp_dietary_capabilities')) {
+            Schema::create('sp_dietary_capabilities', function (Blueprint $table) {
             $table->id();
             $table->foreignId('service_provider_id')->constrained()->onDelete('cascade');
             $table->foreignId('dietary_preference_id')->constrained()->onDelete('cascade');
@@ -20,6 +21,7 @@ return new class extends Migration
 
             $table->unique(['service_provider_id', 'dietary_preference_id'], 'sp_dietary_unique');
         });
+        }
     }
 
     /**

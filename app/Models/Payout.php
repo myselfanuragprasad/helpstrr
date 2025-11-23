@@ -12,6 +12,8 @@ class Payout extends Model
         'payout_number',
         'service_provider_id',
         'task_id',
+        'amount',
+        'platform_fee',
         'gross_amount',
         'platform_commission_percentage',
         'platform_commission',
@@ -21,6 +23,7 @@ class Payout extends Model
         'net_amount',
         'status',
         'payout_method',
+        'payment_method',
         'bank_account_number',
         'bank_ifsc',
         'bank_name',
@@ -29,6 +32,7 @@ class Payout extends Model
         'transaction_id',
         'reference_number',
         'failure_reason',
+        'notes',
         'processed_at',
         'completed_at',
         'failed_at',
@@ -36,6 +40,8 @@ class Payout extends Model
     ];
 
     protected $casts = [
+        'amount' => 'decimal:2',
+        'platform_fee' => 'decimal:2',
         'gross_amount' => 'decimal:2',
         'platform_commission_percentage' => 'decimal:2',
         'platform_commission' => 'decimal:2',
@@ -159,7 +165,7 @@ class Payout extends Model
         ]);
     }
 
-    public function markAsCompleted(string $transactionId, string $referenceNumber = null): void
+    public function markAsCompleted(string $transactionId, ?string $referenceNumber = null): void
     {
         $this->update([
             'status' => 'completed',

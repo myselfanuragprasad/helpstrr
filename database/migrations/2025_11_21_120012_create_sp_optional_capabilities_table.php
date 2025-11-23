@@ -11,7 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('sp_optional_capabilities', function (Blueprint $table) {
+        if (!Schema::hasTable('sp_optional_capabilities')) {
+            Schema::create('sp_optional_capabilities', function (Blueprint $table) {
             $table->id();
             $table->foreignId('service_provider_id')->constrained()->onDelete('cascade');
             $table->foreignId('optional_flag_id')->constrained()->onDelete('cascade');
@@ -20,6 +21,7 @@ return new class extends Migration
 
             $table->unique(['service_provider_id', 'optional_flag_id'], 'sp_optional_unique');
         });
+        }
     }
 
     /**

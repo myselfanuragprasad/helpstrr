@@ -11,7 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('issues', function (Blueprint $table) {
+        if (!Schema::hasTable('issues')) {
+            Schema::create('issues', function (Blueprint $table) {
             $table->id();
             $table->string('issue_number')->unique();
             $table->foreignId('task_id')->constrained()->onDelete('cascade');
@@ -43,6 +44,7 @@ return new class extends Migration
             $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
+        }
     }
 
     /**

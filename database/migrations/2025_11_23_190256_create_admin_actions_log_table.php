@@ -11,7 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('admin_actions_log', function (Blueprint $table) {
+        if (!Schema::hasTable('admin_actions_log')) {
+            Schema::create('admin_actions_log', function (Blueprint $table) {
             $table->id();
             $table->foreignId('admin_user_id')->constrained('users')->onDelete('cascade');
             $table->string('action_type'); // kyc_approval, task_reassignment, sp_block, etc.
@@ -28,6 +29,7 @@ return new class extends Migration
             $table->index(['target_type', 'target_id']);
             $table->index('action_type');
         });
+        }
     }
 
     /**

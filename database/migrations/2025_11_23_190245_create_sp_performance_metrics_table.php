@@ -11,7 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('sp_performance_metrics', function (Blueprint $table) {
+        if (!Schema::hasTable('sp_performance_metrics')) {
+            Schema::create('sp_performance_metrics', function (Blueprint $table) {
             $table->id();
             $table->foreignId('service_provider_id')->constrained('service_providers')->onDelete('cascade');
             $table->date('metric_date');
@@ -34,6 +35,7 @@ return new class extends Migration
             $table->index('metric_date');
             $table->index('badge_level');
         });
+        }
     }
 
     /**

@@ -11,7 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('sp_kyc_documents', function (Blueprint $table) {
+        if (!Schema::hasTable('sp_kyc_documents')) {
+            Schema::create('sp_kyc_documents', function (Blueprint $table) {
             $table->id();
             $table->foreignId('service_provider_id')->constrained('service_providers')->onDelete('cascade');
             $table->enum('document_type', ['aadhaar', 'pan', 'bank_passbook', 'police_verification', 'photo', 'address_proof']);
@@ -29,6 +30,7 @@ return new class extends Migration
             $table->index('verification_status');
             $table->index('expiry_date');
         });
+        }
     }
 
     /**

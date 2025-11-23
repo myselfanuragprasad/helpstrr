@@ -11,7 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('task_price_components', function (Blueprint $table) {
+        if (!Schema::hasTable('task_price_components')) {
+            Schema::create('task_price_components', function (Blueprint $table) {
             $table->id();
             $table->foreignId('task_id')->constrained()->onDelete('cascade');
             
@@ -40,6 +41,7 @@ return new class extends Migration
             
             $table->timestamps();
         });
+        }
     }
 
     /**

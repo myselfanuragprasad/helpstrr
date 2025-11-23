@@ -11,7 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('task_addon_flags', function (Blueprint $table) {
+        if (!Schema::hasTable('task_addon_flags')) {
+            Schema::create('task_addon_flags', function (Blueprint $table) {
             $table->id();
             $table->foreignId('task_id')->constrained()->onDelete('cascade');
             $table->foreignId('chef_addon_flag_id')->constrained()->onDelete('cascade');
@@ -19,6 +20,7 @@ return new class extends Migration
 
             $table->unique(['task_id', 'chef_addon_flag_id']);
         });
+        }
     }
 
     /**
