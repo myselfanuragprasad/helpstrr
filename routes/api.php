@@ -8,14 +8,14 @@ use NotificationChannels\WebPush\WebPushChannel;
 use App\Http\Controllers\Api\v1\GeneralController;
 use App\Http\Controllers\Api\v1\UTMDataController;
 use NotificationChannels\WebPush\PushSubscription;
-use App\Http\Controllers\API\V1\CustomerController;
 use App\Http\Controllers\Api\v1\ReferralController;
 use App\Http\Controllers\Api\v1\SP\SPAuthController;
 use App\Http\Controllers\Api\v1\UserTokenController;
 use App\Http\Controllers\PushSubscriptionController;
 use App\Http\Controllers\Api\Customer\TaskController;
-use App\Http\Controllers\Api\v1\SP\SPDetailController;
 
+use App\Http\Controllers\Api\v1\SP\SPDetailController;
+use App\Http\Controllers\Api\v1\CustomerProfileController;
 use App\Http\Controllers\Api\Customer\ChefBookingController;
 use NotificationChannels\WebPush\PushSubscription as WebPushSubscription;
 
@@ -99,10 +99,10 @@ Route::prefix('v1')->group(function () {
 
     // === Customer Routes ===
     Route::prefix('customer')->group(function () {
-        Route::post('send-otp', [CustomerController::class, 'sendOtp']);
-        Route::post('verify-otp', [CustomerController::class, 'verifyOtp']);
-        Route::post('profile', [CustomerController::class, 'profileDetails']);
+        Route::post('send-otp', [CustomerProfileController::class, 'sendOtp']);
+        Route::post('verify-otp', [CustomerProfileController::class, 'verifyOtp']);
+        Route::post('profile', [CustomerProfileController::class, 'profileDetails']);
 
-        Route::get('profile', [CustomerController::class, 'getCustomerDetails'])->name('customer.getdetails');
+        Route::get('profile', [CustomerProfileController::class, 'getCustomerDetails'])->name('customer.getdetails');
     });
 });

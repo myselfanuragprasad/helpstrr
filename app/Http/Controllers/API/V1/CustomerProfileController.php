@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\API\V1;
+namespace App\Http\Controllers\Api\v1;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -15,7 +15,7 @@ use App\Http\Requests\API\CustomerSendOtpRequest;
 use App\Http\Requests\API\CustomerVerifyOtpRequest;
 use App\Http\Requests\API\CustomerProfileRequest;
 
-class CustomerController extends Controller
+class CustomerProfileController extends Controller
 {
     /**
      * STEP 1 — Send OTP (same as SP)
