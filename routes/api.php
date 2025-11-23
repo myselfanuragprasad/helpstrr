@@ -137,8 +137,68 @@ Route::prefix('mobile')->group(function () {
     
     // === Service Provider Mobile APIs ===
     Route::prefix('sp')->group(function () {
-        // Authentication routes will be added here
-        // Dashboard routes will be added here
-        // Task management routes will be added here
+        // Authentication
+        Route::post('register', [\App\Http\Controllers\Api\Mobile\SP\AuthController::class, 'register']);
+        Route::post('login', [\App\Http\Controllers\Api\Mobile\SP\AuthController::class, 'login']);
+        Route::post('send-otp', [\App\Http\Controllers\Api\Mobile\SP\AuthController::class, 'sendOTP']);
+        Route::post('verify-otp', [\App\Http\Controllers\Api\Mobile\SP\AuthController::class, 'verifyOTP']);
+        
+        // Protected routes
+        Route::middleware('auth:sanctum')->group(function () {
+            Route::get('profile', [\App\Http\Controllers\Api\Mobile\SP\AuthController::class, 'profile']);
+            Route::put('profile', [\App\Http\Controllers\Api\Mobile\SP\AuthController::class, 'updateProfile']);
+            Route::post('upload-kyc', [\App\Http\Controllers\Api\Mobile\SP\AuthController::class, 'uploadKYC']);
+            Route::post('logout', [\App\Http\Controllers\Api\Mobile\SP\AuthController::class, 'logout']);
+            
+            // Task Management
+            Route::get('dashboard', [\App\Http\Controllers\Api\Mobile\SP\TaskController::class, 'dashboard']);
+            Route::get('tasks', [\App\Http\Controllers\Api\Mobile\SP\TaskController::class, 'getTaskRequests']);
+            Route::get('tasks/{taskId}', [\App\Http\Controllers\Api\Mobile\SP\TaskController::class, 'getTaskDetails']);
+            Route::post('tasks/{taskId}/accept', [\App\Http\Controllers\Api\Mobile\SP\TaskController::class, 'acceptTask']);
+            Route::post('tasks/{taskId}/reject', [\App\Http\Controllers\Api\Mobile\SP\TaskController::class, 'rejectTask']);
+            Route::put('tasks/{taskId}/status', [\App\Http\Controllers\Api\Mobile\SP\TaskController::class, 'updateTaskStatus']);
+            Route::get('earnings', [\App\Http\Controllers\Api\Mobile\SP\TaskController::class, 'getEarnings']);
+            Route::put('availability', [\App\Http\Controllers\Api\Mobile\SP\TaskController::class, 'updateAvailability']);
+        });
+    });
+});
+
+// === Core API Routes ===
+Route::prefix('api')->group(function () {
+    
+    // === Allocation Engine APIs ===
+    Route::prefix('allocation')->group(function () {
+        Route::post('auto-assign', [\App\Http\Controllers\Api\AllocationEngineController::class, 'autoAssignTask']);
+        Route::get('available-providers', [\App\Http\Controllers\Api\AllocationEngineController::class, 'getAvailableProviders']);
+        Route::post('reassign', [\App\Http\Controllers\Api\AllocationEngineController::class, 'reassignTask']);
+        Route::get('stats', [\App\Http\Controllers\Api\AllocationEngineController::class, 'getAllocationStats']);
+    });
+    
+    // === Safety & Security APIs ===
+    Route::prefix('safety')->group(function () {
+        Route::post('panic-button', [\App\Http\Controllers\Api\SafetySecurityController::class, 'triggerPanicButton']);
+        Route::get('alerts/{alertId}', [\App\Http\Controllers\Api\SafetySecurityController::class, 'getAlertStatus']);
+        Route::post('verify-identity', [\App\Http\Controllers\Api\SafetySecurityController::class, 'verifyIdentity']);
+        Route::get('guidelines', [\App\Http\Controllers\Api\SafetySecurityController::class, 'getSafetyGuidelines']);
+        Route::post('report-incident', [\App\Http\Controllers\Api\SafetySecurityController::class, 'reportIncident']);
+        Route::get('women-safety', [\App\Http\Controllers\Api\SafetySecurityController::class, 'getWomenSafetyFeatures']);
+    });
+    
+    // === Pricing Logic APIs ===
+    Route::prefix('pricing')->group(function () {
+        Route::post('calculate', [\App\Http\Controllers\Api\PricingController::class, 'calculatePricing']);
+        Route::get('surge', [\App\Http\Controllers\Api\PricingController::class, 'getSurgePricing']);
+        Route::get('cancellation-policy', [\App\Http\Controllers\Api\PricingController::class, 'getCancellationPolicy']);
+        Route::post('cancellation-charges', [\App\Http\Controllers\Api\PricingController::class, 'calculateCancellationCharges']);
+    });
+    
+    // === Communication APIs ===
+    Route::prefix('communication')->group(function () {
+        Route::post('push-notification', [\App\Http\Controllers\Api\CommunicationController::class, 'sendPushNotification']);
+        Route::post('sms', [\App\Http\Controllers\Api\CommunicationController::class, 'sendSMS']);
+        Route::post('whatsapp', [\App\Http\Controllers\Api\CommunicationController::class, 'sendWhatsApp']);
+        Route::post('ivr-call', [\App\Http\Controllers\Api\CommunicationController::class, 'makeIVRCall']);
+        Route::post('task-notification', [\App\Http\Controllers\Api\CommunicationController::class, 'sendTaskNotification']);
+        Route::get('notification-history', [\App\Http\Controllers\Api\CommunicationController::class, 'getNotificationHistory']);
     });
 });
