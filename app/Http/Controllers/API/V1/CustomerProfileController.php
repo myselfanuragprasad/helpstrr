@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Api\v1;
+namespace App\Http\Controllers\API\V1;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -27,7 +27,9 @@ class CustomerProfileController extends Controller
         // find or create customer
         $customer = Customer::firstOrCreate(
             ['phone' => $phone],
-            ['mobile_verified' => false]
+            [
+                'email' => $phone . '@temp.helpstrr.com' // temporary email
+            ]
         );
 
         // generate OTP (SP style)

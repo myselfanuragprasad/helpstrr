@@ -15,7 +15,7 @@ use App\Http\Controllers\PushSubscriptionController;
 use App\Http\Controllers\Api\Customer\TaskController;
 
 use App\Http\Controllers\Api\v1\SP\SPDetailController;
-use App\Http\Controllers\Api\v1\CustomerProfileController;
+use App\Http\Controllers\API\V1\CustomerProfileController;
 use App\Http\Controllers\Api\Customer\ChefBookingController;
 use NotificationChannels\WebPush\PushSubscription as WebPushSubscription;
 
