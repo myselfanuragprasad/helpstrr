@@ -106,3 +106,39 @@ Route::prefix('v1')->group(function () {
         Route::get('profile', [CustomerProfileController::class, 'getCustomerDetails'])->name('customer.getdetails');
     });
 });
+
+// === Mobile API Routes ===
+Route::prefix('mobile')->group(function () {
+    
+    // === Customer Mobile APIs ===
+    Route::prefix('customer')->group(function () {
+        // Authentication
+        Route::post('register', [\App\Http\Controllers\Api\Mobile\Customer\AuthController::class, 'register']);
+        Route::post('login', [\App\Http\Controllers\Api\Mobile\Customer\AuthController::class, 'login']);
+        Route::post('send-otp', [\App\Http\Controllers\Api\Mobile\Customer\AuthController::class, 'sendOTP']);
+        Route::post('verify-otp', [\App\Http\Controllers\Api\Mobile\Customer\AuthController::class, 'verifyOTP']);
+        Route::get('app-config', [\App\Http\Controllers\Api\Mobile\Customer\AuthController::class, 'appConfig']);
+        
+        // Protected routes
+        Route::middleware('auth:sanctum')->group(function () {
+            Route::get('profile', [\App\Http\Controllers\Api\Mobile\Customer\AuthController::class, 'profile']);
+            Route::put('profile', [\App\Http\Controllers\Api\Mobile\Customer\AuthController::class, 'updateProfile']);
+            Route::post('logout', [\App\Http\Controllers\Api\Mobile\Customer\AuthController::class, 'logout']);
+        });
+        
+        // Services
+        Route::get('categories', [\App\Http\Controllers\Api\Mobile\Customer\ServiceController::class, 'getCategories']);
+        Route::get('categories/{categoryId}/services', [\App\Http\Controllers\Api\Mobile\Customer\ServiceController::class, 'getServicesByCategory']);
+        Route::get('services/{serviceId}', [\App\Http\Controllers\Api\Mobile\Customer\ServiceController::class, 'getServiceDetails']);
+        Route::get('services/{serviceId}/providers', [\App\Http\Controllers\Api\Mobile\Customer\ServiceController::class, 'getServiceProviders']);
+        Route::get('services/search', [\App\Http\Controllers\Api\Mobile\Customer\ServiceController::class, 'searchServices']);
+        Route::get('services/popular', [\App\Http\Controllers\Api\Mobile\Customer\ServiceController::class, 'getPopularServices']);
+    });
+    
+    // === Service Provider Mobile APIs ===
+    Route::prefix('sp')->group(function () {
+        // Authentication routes will be added here
+        // Dashboard routes will be added here
+        // Task management routes will be added here
+    });
+});

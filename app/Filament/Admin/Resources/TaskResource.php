@@ -9,6 +9,7 @@ use App\Models\Subcategory;
 use App\Models\Customer;
 use App\Models\ServiceProvider;
 use App\Models\CustomerAddress;
+use App\Models\AdminActionLog;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -16,6 +17,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Infolists;
 use Filament\Infolists\Infolist;
+use Filament\Notifications\Notification;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
@@ -297,6 +299,114 @@ class TaskResource extends Resource
             ->actions([
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
+                
+                Tables\Actions\Action::make('assign_sp')
+                    ->label('Assign SP')
+                    ->icon('heroicon-o-user-plus')
+                    ->color('primary')
+                    ->form([
+                        Forms\Components\Select::make('service_provider_id')
+                            ->label('Service Provider')
+                            ->relationship('serviceProvider', 'name')
+                            ->searchable()
+                            ->required()
+                    ])
+                    ->visible(fn (Task $record): bool => in_array($record->status, ['requested', 'searching']))
+                    ->action(function (Task $record, array $data) {
+                        $record->update([
+                            'service_provider_id' => $data['service_provider_id'],
+                            'status' => 'assigned',
+                            'assigned_at' => now()
+                        ]);
+                        
+                        AdminActionLog::logAction(
+                            auth()->id(),
+                            'task_assignment',
+                            'Task',
+                            $record->id,
+                            "Manually assigned task {$record->task_number} to service provider"
+                        );
+                        
+                        Notification::make()
+                            ->title('Task Assigned Successfully')
+                            ->success()
+                            ->send();
+                    }),
+                    
+                Tables\Actions\Action::make('reassign_sp')
+                    ->label('Reassign')
+                    ->icon('heroicon-o-arrow-path')
+                    ->color('warning')
+                    ->form([
+                        Forms\Components\Select::make('service_provider_id')
+                            ->label('New Service Provider')
+                            ->relationship('serviceProvider', 'name')
+                            ->searchable()
+                            ->required(),
+                        Forms\Components\Textarea::make('reassignment_reason')
+                            ->label('Reassignment Reason')
+                            ->required()
+                    ])
+                    ->visible(fn (Task $record): bool => $record->service_provider_id && in_array($record->status, ['assigned', 'on_the_way']))
+                    ->action(function (Task $record, array $data) {
+                        $oldSP = $record->serviceProvider;
+                        $record->update([
+                            'service_provider_id' => $data['service_provider_id'],
+                            'status' => 'assigned',
+                            'assigned_at' => now()
+                        ]);
+                        
+                        AdminActionLog::logAction(
+                            auth()->id(),
+                            'task_reassignment',
+                            'Task',
+                            $record->id,
+                            "Reassigned task {$record->task_number} from {$oldSP->name} to new SP. Reason: {$data['reassignment_reason']}"
+                        );
+                        
+                        Notification::make()
+                            ->title('Task Reassigned Successfully')
+                            ->success()
+                            ->send();
+                    }),
+                    
+                Tables\Actions\Action::make('emergency_intervention')
+                    ->label('Emergency')
+                    ->icon('heroicon-o-exclamation-triangle')
+                    ->color('danger')
+                    ->form([
+                        Forms\Components\Select::make('intervention_type')
+                            ->label('Intervention Type')
+                            ->options([
+                                'cancel_task' => 'Cancel Task',
+                                'emergency_reassign' => 'Emergency Reassignment',
+                                'customer_support' => 'Customer Support Call',
+                                'sp_support' => 'SP Support Call'
+                            ])
+                            ->required(),
+                        Forms\Components\Textarea::make('intervention_notes')
+                            ->label('Notes')
+                            ->required()
+                    ])
+                    ->visible(fn (Task $record): bool => in_array($record->status, ['assigned', 'on_the_way', 'arrived', 'started']))
+                    ->action(function (Task $record, array $data) {
+                        if ($data['intervention_type'] === 'cancel_task') {
+                            $record->update(['status' => 'cancelled']);
+                        }
+                        
+                        AdminActionLog::logAction(
+                            auth()->id(),
+                            'emergency_intervention',
+                            'Task',
+                            $record->id,
+                            "Emergency intervention on task {$record->task_number}: {$data['intervention_type']} - {$data['intervention_notes']}"
+                        );
+                        
+                        Notification::make()
+                            ->title('Emergency Intervention Logged')
+                            ->success()
+                            ->send();
+                    }),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
