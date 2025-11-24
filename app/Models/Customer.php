@@ -36,7 +36,6 @@ class Customer extends Authenticatable implements HasAvatar, HasName
     protected $casts = [
         'is_active' => 'boolean',
         'last_login' => 'datetime',
-
     ];
 
     public function getFilamentAvatarUrl(): ?string
@@ -210,6 +209,9 @@ class Customer extends Authenticatable implements HasAvatar, HasName
         return $this;
     }
 
+    /**
+     * Get customer addresses
+     */
     public function addresses(): HasMany
     {
         return $this->hasMany(CustomerAddress::class);
