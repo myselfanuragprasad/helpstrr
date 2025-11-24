@@ -243,7 +243,7 @@ class Task extends Model
         $prefix = 'TSK';
         $date = now()->format('Ymd');
         $random = str_pad(mt_rand(1, 9999), 4, '0', STR_PAD_LEFT);
-        
+
         return $prefix . $date . $random;
     }
 

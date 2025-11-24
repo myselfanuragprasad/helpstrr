@@ -118,8 +118,8 @@ class CustomerAddress extends Model
         $lonDelta = deg2rad($longitude - $this->longitude);
 
         $a = sin($latDelta / 2) * sin($latDelta / 2) +
-             cos(deg2rad($this->latitude)) * cos(deg2rad($latitude)) *
-             sin($lonDelta / 2) * sin($lonDelta / 2);
+            cos(deg2rad($this->latitude)) * cos(deg2rad($latitude)) *
+            sin($lonDelta / 2) * sin($lonDelta / 2);
 
         $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
 
@@ -130,7 +130,7 @@ class CustomerAddress extends Model
     {
         // Remove default from other addresses
         $this->customer->addresses()->where('id', '!=', $this->id)->update(['is_default' => false]);
-        
+
         // Set this as default
         $this->update(['is_default' => true]);
     }

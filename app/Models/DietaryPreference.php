@@ -2,9 +2,10 @@
 
 namespace App\Models;
 
+use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class DietaryPreference extends Model
 {
@@ -46,7 +47,7 @@ class DietaryPreference extends Model
     // Accessors & Mutators
     public function setSlugAttribute($value)
     {
-        $this->attributes['slug'] = $value ?: \Str::slug($this->name);
+        $this->attributes['slug'] = $value ?: Str::slug($this->name);
     }
 
     // Helper Methods
