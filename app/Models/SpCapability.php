@@ -12,6 +12,7 @@ class SpCapability extends Model
         'service_provider_id',
         'category_id',
         'subcategory_id',
+        'service_id',
         'max_pax_capacity',
         'night_shift_available',
         'max_travel_distance_km',
@@ -41,6 +42,11 @@ class SpCapability extends Model
         return $this->belongsTo(Subcategory::class);
     }
 
+    public function service(): BelongsTo
+    {
+        return $this->belongsTo(Service::class);
+    }
+
     // Scopes
     public function scopeActive(Builder $query): Builder
     {
@@ -55,6 +61,11 @@ class SpCapability extends Model
     public function scopeBySubcategory(Builder $query, int $subcategoryId): Builder
     {
         return $query->where('subcategory_id', $subcategoryId);
+    }
+
+    public function scopeByService(Builder $query, int $serviceId): Builder
+    {
+        return $query->where('service_id', $serviceId);
     }
 
     public function scopeNightShiftAvailable(Builder $query): Builder

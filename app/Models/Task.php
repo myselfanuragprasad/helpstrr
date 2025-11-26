@@ -18,6 +18,7 @@ class Task extends Model
         'customer_address_id',
         'category_id',
         'subcategory_id',
+        'service_id',
         'service_provider_id',
         'pax_count',
         'requested_hours',
@@ -109,6 +110,11 @@ class Task extends Model
     public function subcategory(): BelongsTo
     {
         return $this->belongsTo(Subcategory::class);
+    }
+
+    public function service(): BelongsTo
+    {
+        return $this->belongsTo(Service::class);
     }
 
     public function serviceProvider(): BelongsTo
