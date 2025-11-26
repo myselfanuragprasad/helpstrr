@@ -134,59 +134,67 @@ class NewSubcategoryResource extends Resource
 
                 Forms\Components\Section::make('Category Assignment')
                     ->schema([
-                        Forms\Components\Repeater::make('categoryRelations')
+                        Forms\Components\Repeater::make('categories')
                             ->label('Assign to Categories')
                             ->relationship('categories')
                             ->schema([
-                                Forms\Components\Select::make('category_id')
+                                Forms\Components\Select::make('id')
                                     ->label('Category')
                                     ->options(NewCategory::active()->pluck('name', 'id'))
                                     ->required()
-                                    ->searchable(),
+                                    ->searchable()
+                                    ->distinct(),
                                 
-                                Forms\Components\Toggle::make('is_primary')
+                                Forms\Components\Toggle::make('pivot.is_primary')
                                     ->label('Primary Category')
                                     ->default(false),
                                 
-                                Forms\Components\TextInput::make('sort_order')
+                                Forms\Components\TextInput::make('pivot.sort_order')
                                     ->label('Sort Order')
                                     ->numeric()
-                                    ->default(0),
+                                    ->default(0)
+                                    ->minValue(0),
                             ])
                             ->columns(3)
                             ->collapsible()
                             ->itemLabel(fn (array $state): ?string => 
-                                NewCategory::find($state['category_id'])?->name ?? null
-                            ),
+                                NewCategory::find($state['id'])?->name ?? null
+                            )
+                            ->addActionLabel('Add Category')
+                            ->reorderable(false),
                     ])
                     ->visibleOn('edit'),
 
                 Forms\Components\Section::make('Service Assignment')
                     ->schema([
-                        Forms\Components\Repeater::make('serviceRelations')
+                        Forms\Components\Repeater::make('services')
                             ->label('Assign Services')
                             ->relationship('services')
                             ->schema([
-                                Forms\Components\Select::make('service_id')
+                                Forms\Components\Select::make('id')
                                     ->label('Service')
                                     ->options(Service::active()->pluck('name', 'id'))
                                     ->required()
-                                    ->searchable(),
+                                    ->searchable()
+                                    ->distinct(),
                                 
-                                Forms\Components\Toggle::make('is_primary')
+                                Forms\Components\Toggle::make('pivot.is_primary')
                                     ->label('Primary Subcategory')
                                     ->default(false),
                                 
-                                Forms\Components\TextInput::make('sort_order')
+                                Forms\Components\TextInput::make('pivot.sort_order')
                                     ->label('Sort Order')
                                     ->numeric()
-                                    ->default(0),
+                                    ->default(0)
+                                    ->minValue(0),
                             ])
                             ->columns(3)
                             ->collapsible()
                             ->itemLabel(fn (array $state): ?string => 
-                                Service::find($state['service_id'])?->name ?? null
-                            ),
+                                Service::find($state['id'])?->name ?? null
+                            )
+                            ->addActionLabel('Add Service')
+                            ->reorderable(false),
                     ])
                     ->visibleOn('edit'),
             ]);

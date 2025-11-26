@@ -65,13 +65,23 @@ class NewCategory extends Model
     }
 
     // Through relationships to get services
-    public function services(): BelongsToMany
+    public function allServices()
     {
-        return $this->belongsToMany(Service::class, 'category_subcategory', 'category_id', 'subcategory_id')
-                    ->join('subcategory_service', 'new_subcategories.id', '=', 'subcategory_service.subcategory_id')
-                    ->join('services', 'subcategory_service.service_id', '=', 'services.id')
-                    ->select('services.*')
-                    ->distinct();
+        $serviceIds = collect();
+        
+        foreach ($this->subcategories as $subcategory) {
+            $serviceIds = $serviceIds->merge($subcategory->services->pluck('id'));
+        }
+        
+        return Service::whereIn('id', $serviceIds->unique())->get();
+    }
+
+    public function getServicesCount(): int
+    {
+        return $this->subcategories()
+            ->withCount('services')
+            ->get()
+            ->sum('services_count');
     }
 
     // Scopes
@@ -98,10 +108,7 @@ class NewCategory extends Model
         return $this->subcategories()->where('new_subcategories.is_active', true)->count();
     }
 
-    public function getServicesCount(): int
-    {
-        return $this->services()->where('services.is_active', true)->count();
-    }
+
 
     public function hasSubcategories(): bool
     {

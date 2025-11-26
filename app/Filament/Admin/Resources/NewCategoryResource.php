@@ -89,30 +89,34 @@ class NewCategoryResource extends Resource
 
                 Forms\Components\Section::make('Subcategories')
                     ->schema([
-                        Forms\Components\Repeater::make('subcategoryRelations')
+                        Forms\Components\Repeater::make('subcategories')
                             ->label('Assign Subcategories')
                             ->relationship('subcategories')
                             ->schema([
-                                Forms\Components\Select::make('subcategory_id')
+                                Forms\Components\Select::make('id')
                                     ->label('Subcategory')
                                     ->options(NewSubcategory::active()->pluck('name', 'id'))
                                     ->required()
-                                    ->searchable(),
+                                    ->searchable()
+                                    ->distinct(),
                                 
-                                Forms\Components\Toggle::make('is_primary')
+                                Forms\Components\Toggle::make('pivot.is_primary')
                                     ->label('Primary Category')
                                     ->default(false),
                                 
-                                Forms\Components\TextInput::make('sort_order')
+                                Forms\Components\TextInput::make('pivot.sort_order')
                                     ->label('Sort Order')
                                     ->numeric()
-                                    ->default(0),
+                                    ->default(0)
+                                    ->minValue(0),
                             ])
                             ->columns(3)
                             ->collapsible()
                             ->itemLabel(fn (array $state): ?string => 
-                                NewSubcategory::find($state['subcategory_id'])?->name ?? null
-                            ),
+                                NewSubcategory::find($state['id'])?->name ?? null
+                            )
+                            ->addActionLabel('Add Subcategory')
+                            ->reorderable(false),
                     ])
                     ->visibleOn('edit'),
             ]);
@@ -144,7 +148,12 @@ class NewCategoryResource extends Resource
                 
                 Tables\Columns\TextColumn::make('services_count')
                     ->label('Services')
-                    ->getStateUsing(fn (NewCategory $record): int => $record->getServicesCount())
+                    ->getStateUsing(function (NewCategory $record): int {
+                        return $record->subcategories()
+                            ->withCount('services')
+                            ->get()
+                            ->sum('services_count');
+                    })
                     ->badge()
                     ->color('success'),
                 
