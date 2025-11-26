@@ -164,7 +164,7 @@ class Service extends Model
         return $query->where('requires_verification', true);
     }
 
-    public function scopePriceRange(Builder $query, float $minPrice = null, float $maxPrice = null): Builder
+    public function scopePriceRange(Builder $query, ?float $minPrice = null, ?float $maxPrice = null): Builder
     {
         if ($minPrice !== null) {
             $query->where(function ($q) use ($minPrice) {
