@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\v1\SP\SPAuthController;
 use App\Http\Controllers\Api\v1\UserTokenController;
 use App\Http\Controllers\PushSubscriptionController;
 use App\Http\Controllers\Api\Customer\TaskController;
+use App\Http\Controllers\Api\SimpleOrderController;
 
 use App\Http\Controllers\Api\v1\SP\SPDetailController;
 use App\Http\Controllers\API\V1\CustomerProfileController;
@@ -22,6 +23,9 @@ use NotificationChannels\WebPush\PushSubscription as WebPushSubscription;
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
+
+// Simple Orders API Routes
+Route::apiResource('simple-orders', SimpleOrderController::class);
 
 
 // Route::post('/login', [AuthController::class, 'login']);
