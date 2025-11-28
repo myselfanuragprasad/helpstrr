@@ -16,12 +16,12 @@ class SimpleOrderResource extends Resource
     protected static ?string $model = SimpleOrder::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-shopping-bag';
-    
-    protected static ?string $navigationLabel = 'Simple Orders';
-    
-    protected static ?string $modelLabel = 'Simple Order';
-    
-    protected static ?string $pluralModelLabel = 'Simple Orders';
+
+    protected static ?string $navigationLabel = 'Customer Orders';
+
+    protected static ?string $modelLabel = 'Customer Order';
+
+    protected static ?string $pluralModelLabel = 'Customer Orders';
 
     public static function form(Form $form): Form
     {
@@ -88,12 +88,12 @@ class SimpleOrderResource extends Resource
             'index' => Pages\ListSimpleOrders::route('/'),
         ];
     }
-    
+
     public static function canCreate(): bool
     {
         return false; // Disable create since orders come from API
     }
-    
+
     public static function canEdit($record): bool
     {
         return false; // Disable edit since this is read-only
