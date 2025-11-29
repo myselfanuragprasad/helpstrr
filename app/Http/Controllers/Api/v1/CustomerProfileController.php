@@ -156,8 +156,8 @@ class CustomerProfileController extends Controller
                 CustomerAddress::create([
                     'customer_id' => $customer->id,
                     'type'        => $addr['type'] ?? null,
-                    'address_line1' => $addr['address_line1'] ?? null,
-                    'address_line2' => $addr['address_line2'] ?? null,
+                    'address_line_1' => $addr['address_line1'] ?? null,
+                    'address_line_2' => $addr['address_line2'] ?? null,
                     'city'        => $addr['city'] ?? null,
                     'state'       => $addr['state'] ?? null,
                     'zip_code'    => $addr['zip_code'] ?? null,
