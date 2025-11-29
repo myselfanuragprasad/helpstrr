@@ -169,6 +169,38 @@ Route::prefix('v1')->group(function () {
 
     // === Core API Routes ===
 
+    // === Service Booking APIs ===
+    Route::prefix('bookings')->group(function () {
+        Route::post('/', [\App\Http\Controllers\Api\v1\ServiceBookingController::class, 'createBooking']);
+        Route::post('/pricing-preview', [\App\Http\Controllers\Api\v1\ServiceBookingController::class, 'getPricingPreview']);
+        Route::get('/services', [\App\Http\Controllers\Api\v1\ServiceBookingController::class, 'getAvailableServices']);
+    });
+
+    // === Task Management APIs ===
+    Route::prefix('tasks')->group(function () {
+        Route::put('/{taskId}/status', [\App\Http\Controllers\Api\v1\TaskManagementController::class, 'updateTaskStatus']);
+        Route::post('/{taskId}/cancel', [\App\Http\Controllers\Api\v1\TaskManagementController::class, 'cancelTask']);
+        Route::post('/{taskId}/rate', [\App\Http\Controllers\Api\v1\TaskManagementController::class, 'rateTask']);
+        Route::get('/{taskId}', [\App\Http\Controllers\Api\v1\TaskManagementController::class, 'getTaskDetails']);
+    });
+
+    // === Customer Order APIs ===
+    Route::prefix('customer')->group(function () {
+        Route::get('/orders', [\App\Http\Controllers\Api\v1\CustomerOrderController::class, 'getCustomerOrders']);
+        Route::get('/orders/{orderId}', [\App\Http\Controllers\Api\v1\CustomerOrderController::class, 'getOrderDetails']);
+        Route::get('/orders/statistics', [\App\Http\Controllers\Api\v1\CustomerOrderController::class, 'getOrderStatistics']);
+        Route::get('/orders/upcoming', [\App\Http\Controllers\Api\v1\CustomerOrderController::class, 'getUpcomingOrders']);
+    });
+
+    // === Service Provider Task APIs ===
+    Route::prefix('sp')->group(function () {
+        Route::get('/dashboard', [\App\Http\Controllers\Api\v1\ServiceProviderTaskController::class, 'getDashboard']);
+        Route::get('/tasks', [\App\Http\Controllers\Api\v1\ServiceProviderTaskController::class, 'getAssignedTasks']);
+        Route::post('/task-requests/{broadcastId}/accept', [\App\Http\Controllers\Api\v1\ServiceProviderTaskController::class, 'acceptTaskRequest']);
+        Route::post('/task-requests/{broadcastId}/reject', [\App\Http\Controllers\Api\v1\ServiceProviderTaskController::class, 'rejectTaskRequest']);
+        Route::get('/earnings', [\App\Http\Controllers\Api\v1\ServiceProviderTaskController::class, 'getEarnings']);
+        Route::put('/availability', [\App\Http\Controllers\Api\v1\ServiceProviderTaskController::class, 'updateAvailability']);
+    });
 
     // === Allocation Engine APIs ===
     Route::prefix('allocation')->group(function () {
