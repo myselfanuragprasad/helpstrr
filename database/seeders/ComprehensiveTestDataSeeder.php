@@ -26,6 +26,12 @@ class ComprehensiveTestDataSeeder extends Seeder
     {
         $this->command->info('Creating comprehensive test data...');
 
+        // Check if data already exists
+        if (Customer::count() > 0) {
+            $this->command->info('Test data already exists. Skipping seeder...');
+            return;
+        }
+
         // Create test customers
         $this->createCustomers();
         
@@ -134,7 +140,7 @@ class ComprehensiveTestDataSeeder extends Seeder
             );
             
             foreach ($addresses as $addressData) {
-                $customer->addresses()->updateOrCreate(
+                CustomerAddress::updateOrCreate(
                     [
                         'customer_id' => $customer->id,
                         'label' => $addressData['label']
