@@ -122,14 +122,14 @@ Route::prefix('v1')->group(function () {
     // === Core API Routes ===
 
     // === Service Booking APIs ===
-    Route::prefix('bookings')->group(function () {
-        Route::post('/', [ServiceBookingController::class, 'createBooking']);
-        Route::post('/pricing-preview', [ServiceBookingController::class, 'getPricingPreview']);
-        Route::get('/services', [ServiceBookingController::class, 'getAvailableServices']);
-    });
+    // Route::prefix('bookings')->group(function () {
+    //     Route::post('/', [ServiceBookingController::class, 'createBooking']);
+    //     Route::post('/pricing-preview', [ServiceBookingController::class, 'getPricingPreview']);
+    //     Route::get('/services', [ServiceBookingController::class, 'getAvailableServices']);
+    // });
 
     // === Unified Booking APIs (New System) ===
-    Route::prefix('unified-booking')->group(function () {
+    Route::prefix('bookings')->group(function () {
         Route::post('/', [UnifiedBookingController::class, 'createBooking']);
         Route::post('/pricing-preview', [UnifiedBookingController::class, 'getPricingPreview']);
         Route::get('/services', [UnifiedBookingController::class, 'getAvailableServices']);
