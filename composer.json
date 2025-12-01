@@ -24,7 +24,6 @@
         "jeffgreco13/filament-breezy": "^2.4",
         "laravel-notification-channels/webpush": "10.0",
         "laravel/framework": "^12.3.3",
-        "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.9",
         "league/flysystem-aws-s3-v3": "3.0",
         "owenvoke/blade-fontawesome": "^2.8",

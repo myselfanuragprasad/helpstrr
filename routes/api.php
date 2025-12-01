@@ -16,13 +16,16 @@ use App\Http\Controllers\Api\Customer\TaskController;
 use App\Http\Controllers\Api\SimpleOrderController;
 
 use App\Http\Controllers\Api\v1\SP\SPDetailController;
-use App\Http\Controllers\API\V1\CustomerProfileController;
+use App\Http\Controllers\Api\v1\CustomerProfileController;
+use App\Http\Controllers\Api\v1\ServiceBookingController;
+use App\Http\Controllers\Api\v1\UnifiedBookingController;
+use App\Http\Controllers\Api\v1\CustomerOrderController;
+use App\Http\Controllers\Api\v1\ServiceProviderTaskController;
+use App\Http\Controllers\Api\v1\TaskManagementController;
 use App\Http\Controllers\Api\Customer\ChefBookingController;
 use NotificationChannels\WebPush\PushSubscription as WebPushSubscription;
 
-Route::get('/user', function (Request $request) {
-    return $request->user();
-})->middleware('auth:sanctum');
+// Removed Sanctum middleware - using custom token validation
 
 // Simple Orders API Routes
 Route::apiResource('simple-orders', SimpleOrderController::class);
@@ -72,7 +75,7 @@ Route::prefix('v1')->group(function () {
     Route::post('/utm-track', [UTMDataController::class, 'store']);
 
     // === Customer Routes ===
-    Route::prefix('customer')->middleware('auth:sanctum')->group(function () {
+    Route::prefix('customer')->group(function () {
 
         // Task Management
         Route::prefix('tasks')->group(function () {
@@ -103,6 +106,7 @@ Route::prefix('v1')->group(function () {
 
     // === Customer Routes ===
     Route::prefix('customer')->group(function () {
+        Route::post('login', [CustomerProfileController::class, 'login']);
         Route::post('send-otp', [CustomerProfileController::class, 'sendOtp']);
         Route::post('verify-otp', [CustomerProfileController::class, 'verifyOtp']);
         Route::post('profile', [CustomerProfileController::class, 'profileDetails']);
@@ -119,35 +123,42 @@ Route::prefix('v1')->group(function () {
 
     // === Service Booking APIs ===
     Route::prefix('bookings')->group(function () {
-        Route::post('/', [\App\Http\Controllers\Api\v1\ServiceBookingController::class, 'createBooking']);
-        Route::post('/pricing-preview', [\App\Http\Controllers\Api\v1\ServiceBookingController::class, 'getPricingPreview']);
-        Route::get('/services', [\App\Http\Controllers\Api\v1\ServiceBookingController::class, 'getAvailableServices']);
+        Route::post('/', [ServiceBookingController::class, 'createBooking']);
+        Route::post('/pricing-preview', [ServiceBookingController::class, 'getPricingPreview']);
+        Route::get('/services', [ServiceBookingController::class, 'getAvailableServices']);
+    });
+
+    // === Unified Booking APIs (New System) ===
+    Route::prefix('unified-booking')->group(function () {
+        Route::post('/', [UnifiedBookingController::class, 'createBooking']);
+        Route::post('/pricing-preview', [UnifiedBookingController::class, 'getPricingPreview']);
+        Route::get('/services', [UnifiedBookingController::class, 'getAvailableServices']);
     });
 
     // === Task Management APIs ===
     Route::prefix('tasks')->group(function () {
-        Route::put('/{taskId}/status', [\App\Http\Controllers\Api\v1\TaskManagementController::class, 'updateTaskStatus']);
-        Route::post('/{taskId}/cancel', [\App\Http\Controllers\Api\v1\TaskManagementController::class, 'cancelTask']);
-        Route::post('/{taskId}/rate', [\App\Http\Controllers\Api\v1\TaskManagementController::class, 'rateTask']);
-        Route::get('/{taskId}', [\App\Http\Controllers\Api\v1\TaskManagementController::class, 'getTaskDetails']);
+        Route::put('/{taskId}/status', [TaskManagementController::class, 'updateTaskStatus']);
+        Route::post('/{taskId}/cancel', [TaskManagementController::class, 'cancelTask']);
+        Route::post('/{taskId}/rate', [TaskManagementController::class, 'rateTask']);
+        Route::get('/{taskId}', [TaskManagementController::class, 'getTaskDetails']);
     });
 
     // === Customer Order APIs ===
     Route::prefix('customer')->group(function () {
-        Route::get('/orders', [\App\Http\Controllers\Api\v1\CustomerOrderController::class, 'getCustomerOrders']);
-        Route::get('/orders/{orderId}', [\App\Http\Controllers\Api\v1\CustomerOrderController::class, 'getOrderDetails']);
-        Route::get('/orders/statistics', [\App\Http\Controllers\Api\v1\CustomerOrderController::class, 'getOrderStatistics']);
-        Route::get('/orders/upcoming', [\App\Http\Controllers\Api\v1\CustomerOrderController::class, 'getUpcomingOrders']);
+        Route::get('/orders', [CustomerOrderController::class, 'getCustomerOrders']);
+        Route::get('/orders/{orderId}', [CustomerOrderController::class, 'getOrderDetails']);
+        Route::get('/orders/statistics', [CustomerOrderController::class, 'getOrderStatistics']);
+        Route::get('/orders/upcoming', [CustomerOrderController::class, 'getUpcomingOrders']);
     });
 
     // === Service Provider Task APIs ===
     Route::prefix('sp')->group(function () {
-        Route::get('/dashboard', [\App\Http\Controllers\Api\v1\ServiceProviderTaskController::class, 'getDashboard']);
-        Route::get('/tasks', [\App\Http\Controllers\Api\v1\ServiceProviderTaskController::class, 'getAssignedTasks']);
-        Route::post('/task-requests/{broadcastId}/accept', [\App\Http\Controllers\Api\v1\ServiceProviderTaskController::class, 'acceptTaskRequest']);
-        Route::post('/task-requests/{broadcastId}/reject', [\App\Http\Controllers\Api\v1\ServiceProviderTaskController::class, 'rejectTaskRequest']);
-        Route::get('/earnings', [\App\Http\Controllers\Api\v1\ServiceProviderTaskController::class, 'getEarnings']);
-        Route::put('/availability', [\App\Http\Controllers\Api\v1\ServiceProviderTaskController::class, 'updateAvailability']);
+        Route::get('/dashboard', [ServiceProviderTaskController::class, 'getDashboard']);
+        Route::get('/tasks', [ServiceProviderTaskController::class, 'getAssignedTasks']);
+        Route::post('/task-requests/{broadcastId}/accept', [ServiceProviderTaskController::class, 'acceptTaskRequest']);
+        Route::post('/task-requests/{broadcastId}/reject', [ServiceProviderTaskController::class, 'rejectTaskRequest']);
+        Route::get('/earnings', [ServiceProviderTaskController::class, 'getEarnings']);
+        Route::put('/availability', [ServiceProviderTaskController::class, 'updateAvailability']);
     });
 
     // === Allocation Engine APIs ===

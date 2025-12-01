@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\API\V1;
+namespace App\Http\Controllers\Api\v1;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -80,9 +80,8 @@ class CustomerProfileController extends Controller
             ], 400);
         }
 
-        $token = $customer->createToken('auth_token')->plainTextToken;
+        $token = $customer->generateApiToken('auth_token');
         // mark verified & clear OTP
-        $customer->token = $token;
         $customer->mobile_verified = true;
         $customer->login_otp = null;
         $customer->save();
@@ -240,5 +239,46 @@ class CustomerProfileController extends Controller
             'status_message' => 'Profile details submitted',
             'data' => $user
         ];
+    }
+
+    /**
+     * Simple login method for testing
+     */
+    public function login(Request $request): JsonResponse
+    {
+        $request->validate([
+            'phone' => 'required|string',
+            'password' => 'required|string'
+        ]);
+
+        $customer = Customer::where('phone', $request->phone)->first();
+
+        if (!$customer || !password_verify($request->password, $customer->password)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid credentials'
+            ], 401);
+        }
+
+        if (!$customer->is_active) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Account is deactivated'
+            ], 403);
+        }
+
+        // Generate token
+        $token = $customer->generateApiToken('auth_token');
+        $customer->last_login = now();
+        $customer->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Login successful',
+            'data' => [
+                'customer' => $customer->makeHidden(['password']),
+                'token' => $token
+            ]
+        ]);
     }
 }

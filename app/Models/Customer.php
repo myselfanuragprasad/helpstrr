@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use App\Models\CustomerAddress;
-use Laravel\Sanctum\HasApiTokens;
+use App\Models\Task;
 use Illuminate\Support\Facades\DB;
 use Filament\Models\Contracts\HasName;
 use Illuminate\Support\Facades\Storage;
@@ -14,7 +14,6 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 
 class Customer extends Authenticatable implements HasAvatar, HasName
 {
-    use HasApiTokens;
 
     protected $fillable = [
         'name',
@@ -170,11 +169,8 @@ class Customer extends Authenticatable implements HasAvatar, HasName
      */
     public function generateApiToken($tokenName = 'auth_token')
     {
-        // Revoke existing tokens
-        $this->tokens()->delete();
-
-        // Create new token
-        $token = $this->createToken($tokenName)->plainTextToken;
+        // Generate custom token
+        $token = bin2hex(random_bytes(32));
 
         // Update token field
         $this->update(['token' => $token]);
@@ -215,5 +211,13 @@ class Customer extends Authenticatable implements HasAvatar, HasName
     public function addresses(): HasMany
     {
         return $this->hasMany(CustomerAddress::class);
+    }
+
+    /**
+     * Get customer tasks/bookings
+     */
+    public function tasks(): HasMany
+    {
+        return $this->hasMany(Task::class);
     }
 }

@@ -5,8 +5,8 @@ namespace App\Http\Controllers\Api\v1;
 use App\Http\Controllers\Controller;
 use App\Models\Task;
 use App\Models\Customer;
-use App\Models\Category;
-use App\Models\Subcategory;
+use App\Models\NewCategory;
+use App\Models\NewSubcategory;
 use App\Models\Service;
 use App\Models\CustomerAddress;
 use App\Models\TaskPriceComponent;
@@ -19,7 +19,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
-class ServiceBookingController extends Controller
+class UnifiedBookingController extends Controller
 {
     protected $priceCalculationService;
     protected $taskAllocationService;
@@ -33,7 +33,7 @@ class ServiceBookingController extends Controller
     }
 
     /**
-     * Create a new service booking
+     * Create a unified booking for any service
      * 
      * @param Request $request
      * @return JsonResponse
@@ -45,8 +45,6 @@ class ServiceBookingController extends Controller
                 'phone' => 'required|string',
                 'token' => 'required|string',
                 'customer_address_id' => 'required|exists:customer_addresses,id',
-                'category_id' => 'required|exists:categories,id',
-                'subcategory_id' => 'required|exists:subcategories,id',
                 'service_id' => 'required|exists:services,id',
                 'pax_count' => 'nullable|integer|min:1|max:50',
                 'requested_hours' => 'required|integer|min:1|max:24',
@@ -88,7 +86,7 @@ class ServiceBookingController extends Controller
                 ], $tokenCheck['status_code']);
             }
 
-            // Validate customer and address relationship
+            // Get customer and validate address relationship
             $customer = Customer::where('phone', $data['phone'])->first();
             $customerAddress = $customer->addresses()->find($data['customer_address_id']);
             
@@ -99,27 +97,38 @@ class ServiceBookingController extends Controller
                 ], 400);
             }
 
-            // Validate service hierarchy
-            $category = Category::find($data['category_id']);
-            $subcategory = Subcategory::where('id', $data['subcategory_id'])
-                ->where('category_id', $data['category_id'])
-                ->first();
+            // Get service and validate hierarchy
+            $service = Service::with(['subcategories.categories'])->find($data['service_id']);
             
-            if (!$subcategory) {
+            if (!$service || !$service->is_active) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Invalid subcategory for selected category'
+                    'message' => 'Service not available'
                 ], 400);
             }
 
-            $service = Service::where('id', $data['service_id'])
-                ->where('subcategory_id', $data['subcategory_id'])
+            // Get the primary category and subcategory for this service
+            $primarySubcategory = $service->subcategories()
+                ->wherePivot('is_primary', true)
                 ->first();
-            
-            if (!$service) {
+                
+            if (!$primarySubcategory) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Invalid service for selected subcategory'
+                    'message' => 'Service configuration error'
+                ], 400);
+            }
+
+            $primaryCategory = $primarySubcategory->categories()
+                ->wherePivot('is_primary', true)
+                ->first();
+
+            // Validate service-specific requirements
+            $validationResult = $this->validateServiceRequirements($service, $data);
+            if (!$validationResult['valid']) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $validationResult['message']
                 ], 400);
             }
 
@@ -127,7 +136,7 @@ class ServiceBookingController extends Controller
             if ($data['is_instant'] ?? false) {
                 $scheduledAt = now()->addMinutes(30); // 30 minutes from now for instant booking
             } else {
-                $scheduledAt = $data['scheduled_at'] ? Carbon::parse($data['scheduled_at']) : Carbon::parse($data['dates'][0] . ' ' . $data['start_time']);
+                $scheduledAt = isset($data['scheduled_at']) ? Carbon::parse($data['scheduled_at']) : Carbon::parse($data['dates'][0] . ' ' . $data['start_time']);
             }
 
             // Validate lead time (minimum 2 hours for scheduled bookings)
@@ -141,24 +150,26 @@ class ServiceBookingController extends Controller
             DB::beginTransaction();
 
             try {
-                // Create task
+                // Create task with new category system
                 $task = Task::create([
                     'customer_id' => $customer->id,
                     'customer_address_id' => $data['customer_address_id'],
-                    'category_id' => $data['category_id'],
-                    'subcategory_id' => $data['subcategory_id'],
+                    'category_id' => $primaryCategory ? $primaryCategory->id : null,
+                    'subcategory_id' => $primarySubcategory->id,
                     'service_id' => $data['service_id'],
-                    'pax_count' => $data['pax_count'] ?? 1,
+                    'pax_count' => $data['pax_count'] ?? ($service->pax_required ? $service->min_pax : 1),
                     'requested_hours' => $data['requested_hours'],
                     'billable_hours' => $data['requested_hours'], // Initially same as requested
                     'dates' => $data['dates'],
                     'start_time' => $data['start_time'],
                     'end_time' => $data['end_time'],
                     'recurrence_type' => $data['recurrence_type'],
-                    'dietary_preference_id' => $data['dietary_preference_id'],
+                    'dietary_preference_id' => $data['dietary_preference_id'] ?? null,
                     'status' => Task::STATUS_REQUESTED,
                     'scheduled_at' => $scheduledAt,
-                    'special_instructions' => $data['special_instructions'],
+                    'special_instructions' => $data['special_instructions'] ?? null,
+                    'total_amount' => 0, // Will be updated after price calculation
+                    'final_amount' => 0, // Will be updated after price calculation
                     'is_active' => true,
                 ]);
 
@@ -182,20 +193,8 @@ class ServiceBookingController extends Controller
                     'final_amount' => $priceComponents['total_incl_gst'],
                 ]);
 
-                // Attach selected cuisines (for chef tasks)
-                if (!empty($data['selected_cuisines'])) {
-                    $task->selectedCuisines()->attach($data['selected_cuisines']);
-                }
-
-                // Attach addon flags (for chef tasks)
-                if (!empty($data['addon_flags'])) {
-                    $task->addonFlags()->attach($data['addon_flags']);
-                }
-
-                // Attach optional flags
-                if (!empty($data['optional_flags'])) {
-                    $task->optionalFlags()->attach($data['optional_flags']);
-                }
+                // Attach service-specific data
+                $this->attachServiceSpecificData($task, $data);
 
                 // Start allocation process
                 $task->update(['status' => Task::STATUS_SEARCHING]);
@@ -209,8 +208,6 @@ class ServiceBookingController extends Controller
                 $task->load([
                     'customer',
                     'customerAddress',
-                    'category',
-                    'subcategory',
                     'service',
                     'priceComponents',
                     'selectedCuisines',
@@ -243,7 +240,7 @@ class ServiceBookingController extends Controller
     }
 
     /**
-     * Get pricing preview for a booking
+     * Get pricing preview for any service
      * 
      * @param Request $request
      * @return JsonResponse
@@ -252,8 +249,8 @@ class ServiceBookingController extends Controller
     {
         try {
             $validator = Validator::make($request->all(), [
-                'category_id' => 'required|exists:categories,id',
-                'subcategory_id' => 'required|exists:subcategories,id',
+                'phone' => 'required|string',
+                'token' => 'required|string',
                 'service_id' => 'required|exists:services,id',
                 'pax_count' => 'nullable|integer|min:1|max:50',
                 'requested_hours' => 'required|integer|min:1|max:24',
@@ -272,12 +269,23 @@ class ServiceBookingController extends Controller
 
             $data = $validator->validated();
 
+            // Validate token
+            $tokenCheck = AuthHelper::validateToken('customers', $data['phone'], $data['token'], 'phone');
+            if (!$tokenCheck['valid']) {
+                return response()->json([
+                    'status' => 'failure',
+                    'status_code' => $tokenCheck['status_code'],
+                    'status_message' => $tokenCheck['message'],
+                    'data' => null
+                ], $tokenCheck['status_code']);
+            }
+
+            $service = Service::find($data['service_id']);
+            
             // Create temporary task object for pricing calculation
             $tempTask = new Task([
-                'category_id' => $data['category_id'],
-                'subcategory_id' => $data['subcategory_id'],
                 'service_id' => $data['service_id'],
-                'pax_count' => $data['pax_count'] ?? 1,
+                'pax_count' => $data['pax_count'] ?? ($service->pax_required ? $service->min_pax : 1),
                 'requested_hours' => $data['requested_hours'],
                 'billable_hours' => $data['requested_hours'],
                 'scheduled_at' => Carbon::parse($data['scheduled_at']),
@@ -294,6 +302,13 @@ class ServiceBookingController extends Controller
                     'breakdown' => $this->priceCalculationService->getPriceBreakdown($priceComponents),
                     'estimated_duration' => $data['requested_hours'] . ' hours',
                     'surge_info' => $this->priceCalculationService->getSurgeInfo($tempTask),
+                    'service_info' => [
+                        'name' => $service->name,
+                        'base_price' => $service->base_price,
+                        'hourly_rate' => $service->hourly_rate,
+                        'min_hours' => $service->min_hours,
+                        'max_hours' => $service->max_hours,
+                    ]
                 ]
             ]);
 
@@ -307,7 +322,7 @@ class ServiceBookingController extends Controller
     }
 
     /**
-     * Get available services for booking
+     * Get all available services organized by categories
      * 
      * @param Request $request
      * @return JsonResponse
@@ -316,7 +331,9 @@ class ServiceBookingController extends Controller
     {
         try {
             $validator = Validator::make($request->all(), [
-                'category_id' => 'nullable|exists:categories,id',
+                'phone' => 'required|string',
+                'token' => 'required|string',
+                'category_id' => 'nullable|exists:new_categories,id',
                 'latitude' => 'nullable|numeric',
                 'longitude' => 'nullable|numeric',
                 'search' => 'nullable|string|max:100',
@@ -332,7 +349,18 @@ class ServiceBookingController extends Controller
 
             $data = $validator->validated();
 
-            $categoriesQuery = Category::with(['subcategories.services'])
+            // Validate token
+            $tokenCheck = AuthHelper::validateToken('customers', $data['phone'], $data['token'], 'phone');
+            if (!$tokenCheck['valid']) {
+                return response()->json([
+                    'status' => 'failure',
+                    'status_code' => $tokenCheck['status_code'],
+                    'status_message' => $tokenCheck['message'],
+                    'data' => null
+                ], $tokenCheck['status_code']);
+            }
+
+            $categoriesQuery = NewCategory::with(['subcategories.services'])
                 ->where('is_active', true);
 
             if (!empty($data['category_id'])) {
@@ -346,7 +374,7 @@ class ServiceBookingController extends Controller
                 });
             }
 
-            $categories = $categoriesQuery->get();
+            $categories = $categoriesQuery->ordered()->get();
 
             $formattedCategories = $categories->map(function ($category) {
                 return [
@@ -355,6 +383,7 @@ class ServiceBookingController extends Controller
                     'slug' => $category->slug,
                     'description' => $category->description,
                     'icon' => $category->icon,
+                    'color' => $category->color,
                     'subcategories' => $category->subcategories->where('is_active', true)->map(function ($subcategory) {
                         return [
                             'id' => $subcategory->id,
@@ -362,20 +391,24 @@ class ServiceBookingController extends Controller
                             'slug' => $subcategory->slug,
                             'description' => $subcategory->description,
                             'icon' => $subcategory->icon,
-                            'pax_required' => $subcategory->pax_required,
-                            'is_event_category' => $subcategory->is_event_category,
-                            'is_takeaway' => $subcategory->is_takeaway,
-                            'consultation_fee' => $subcategory->consultation_fee,
+                            'color' => $subcategory->color,
                             'services' => $subcategory->services->where('is_active', true)->map(function ($service) {
                                 return [
                                     'id' => $service->id,
                                     'name' => $service->name,
                                     'slug' => $service->slug,
                                     'description' => $service->description,
+                                    'short_description' => $service->short_description,
+                                    'icon' => $service->icon,
                                     'base_price' => $service->base_price,
                                     'hourly_rate' => $service->hourly_rate,
                                     'min_hours' => $service->min_hours,
                                     'max_hours' => $service->max_hours,
+                                    'pax_required' => $service->pax_required,
+                                    'min_pax' => $service->min_pax,
+                                    'max_pax' => $service->max_pax,
+                                    'is_event_service' => $service->is_event_service,
+                                    'is_takeaway' => $service->is_takeaway,
                                 ];
                             })->values(),
                         ];
@@ -402,10 +435,56 @@ class ServiceBookingController extends Controller
     }
 
     /**
+     * Validate service-specific requirements
+     */
+    private function validateServiceRequirements(Service $service, array $data): array
+    {
+        // Check pax requirements
+        if ($service->pax_required) {
+            $paxCount = $data['pax_count'] ?? 1;
+            if ($paxCount < $service->min_pax || ($service->max_pax && $paxCount > $service->max_pax)) {
+                return [
+                    'valid' => false,
+                    'message' => "Pax count must be between {$service->min_pax} and {$service->max_pax}"
+                ];
+            }
+        }
+
+        // Check hour requirements
+        $requestedHours = $data['requested_hours'];
+        if ($requestedHours < $service->min_hours || ($service->max_hours && $requestedHours > $service->max_hours)) {
+            return [
+                'valid' => false,
+                'message' => "Service duration must be between {$service->min_hours} and {$service->max_hours} hours"
+            ];
+        }
+
+        return ['valid' => true];
+    }
+
+    /**
+     * Attach service-specific data to task
+     */
+    private function attachServiceSpecificData(Task $task, array $data): void
+    {
+        // Attach selected cuisines (for chef tasks)
+        if (!empty($data['selected_cuisines'])) {
+            $task->selectedCuisines()->attach($data['selected_cuisines']);
+        }
+
+        // Attach addon flags (for chef tasks)
+        if (!empty($data['addon_flags'])) {
+            $task->addonFlags()->attach($data['addon_flags']);
+        }
+
+        // Attach optional flags
+        if (!empty($data['optional_flags'])) {
+            $task->optionalFlags()->attach($data['optional_flags']);
+        }
+    }
+
+    /**
      * Format task response for API
-     * 
-     * @param Task $task
-     * @return array
      */
     private function formatTaskResponse(Task $task): array
     {
@@ -413,57 +492,30 @@ class ServiceBookingController extends Controller
             'id' => $task->id,
             'task_number' => $task->task_number,
             'status' => $task->status,
-            'status_badge' => $task->status_badge,
-            'customer' => [
-                'id' => $task->customer->id,
-                'name' => $task->customer->name,
-                'phone' => $task->customer->phone,
-            ],
-            'address' => [
-                'id' => $task->customerAddress->id,
-                'address_line_1' => $task->customerAddress->address_line_1,
-                'address_line_2' => $task->customerAddress->address_line_2,
-                'city' => $task->customerAddress->city,
-                'state' => $task->customerAddress->state,
-                'pincode' => $task->customerAddress->pincode,
-                'latitude' => $task->customerAddress->latitude,
-                'longitude' => $task->customerAddress->longitude,
-            ],
             'service' => [
-                'category' => $task->category->name,
-                'subcategory' => $task->subcategory->name,
-                'service' => $task->service->name,
+                'id' => $task->service->id,
+                'name' => $task->service->name,
+                'icon' => $task->service->icon,
             ],
-            'details' => [
-                'pax_count' => $task->pax_count,
-                'requested_hours' => $task->requested_hours,
-                'billable_hours' => $task->billable_hours,
+            'schedule' => [
+                'scheduled_at' => $task->scheduled_at->toISOString(),
                 'dates' => $task->dates,
-                'start_time' => $task->start_time->format('H:i'),
-                'end_time' => $task->end_time->format('H:i'),
+                'start_time' => $task->start_time,
+                'end_time' => $task->end_time,
+                'duration_hours' => $task->requested_hours,
                 'recurrence_type' => $task->recurrence_type,
-                'recurrence_display' => $task->recurrence_display,
-                'special_instructions' => $task->special_instructions,
             ],
             'pricing' => [
                 'total_amount' => $task->total_amount,
                 'gst_amount' => $task->gst_amount,
                 'final_amount' => $task->final_amount,
+                'currency' => 'INR',
             ],
-            'schedule' => [
-                'scheduled_at' => $task->scheduled_at->toISOString(),
-                'assigned_at' => $task->assigned_at?->toISOString(),
-                'started_at' => $task->started_at?->toISOString(),
-                'completed_at' => $task->completed_at?->toISOString(),
+            'details' => [
+                'pax_count' => $task->pax_count,
+                'special_instructions' => $task->special_instructions,
             ],
-            'service_provider' => $task->serviceProvider ? [
-                'id' => $task->serviceProvider->id,
-                'name' => $task->serviceProvider->spUser->name,
-                'phone' => $task->serviceProvider->spUser->phone,
-                'rating' => $task->serviceProvider->rating,
-            ] : null,
             'created_at' => $task->created_at->toISOString(),
-            'updated_at' => $task->updated_at->toISOString(),
         ];
     }
 }

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\v1;
 use App\Http\Controllers\Controller;
 use App\Models\Task;
 use App\Models\Customer;
+use App\Helpers\AuthHelper;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Validator;
@@ -22,7 +23,8 @@ class CustomerOrderController extends Controller
     {
         try {
             $validator = Validator::make($request->all(), [
-                'customer_id' => 'required|exists:customers,id',
+                'phone' => 'required|string',
+                'token' => 'required|string',
                 'status' => 'nullable|string|in:all,active,completed,cancelled',
                 'page' => 'nullable|integer|min:1',
                 'per_page' => 'nullable|integer|min:1|max:50',
@@ -41,7 +43,20 @@ class CustomerOrderController extends Controller
             }
 
             $data = $validator->validated();
-            $customerId = $data['customer_id'];
+            
+            // Validate token
+            $tokenCheck = AuthHelper::validateToken('customers', $data['phone'], $data['token'], 'phone');
+            if (!$tokenCheck['valid']) {
+                return response()->json([
+                    'status' => 'failure',
+                    'status_code' => $tokenCheck['status_code'],
+                    'status_message' => $tokenCheck['message'],
+                    'data' => null
+                ], $tokenCheck['status_code']);
+            }
+            
+            $customer = Customer::where('phone', $data['phone'])->first();
+            $customerId = $customer->id;
             $status = $data['status'] ?? 'all';
             $page = $data['page'] ?? 1;
             $perPage = $data['per_page'] ?? 10;

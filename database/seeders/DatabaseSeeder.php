@@ -47,6 +47,7 @@ class DatabaseSeeder extends Seeder
                 ChefCuisineSeeder::class,
                 DietaryPreferenceSeeder::class,
                 OptionalFlagSeeder::class,
+                ComprehensiveTestDataSeeder::class,
             ]
         );
     }
