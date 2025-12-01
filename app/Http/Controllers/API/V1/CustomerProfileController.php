@@ -160,7 +160,7 @@ class CustomerProfileController extends Controller
                     'address_line_2' => $addr['address_line2'] ?? null,
                     'city'        => $addr['city'] ?? null,
                     'state'       => $addr['state'] ?? null,
-                    'zip_code'    => $addr['zip_code'] ?? null,
+                    'pincode'    => $addr['zip_code'] ?? null,
                     'country'     => $addr['country'] ?? 'India',
                     'latitude'    => $addr['latitude'] ?? null,
                     'longitude'   => $addr['longitude'] ?? null,
