@@ -72,34 +72,34 @@ Route::prefix('v1')->group(function () {
     Route::post('/utm-track', [UTMDataController::class, 'store']);
 
     // === Customer Routes ===
-    // Route::prefix('customer')->middleware('auth:sanctum')->group(function () {
+    Route::prefix('customer')->middleware('auth:sanctum')->group(function () {
 
-    //     // Task Management
-    //     Route::prefix('tasks')->group(function () {
-    //         Route::get('/', [TaskController::class, 'index'])->name('customer.tasks.index');
-    //         Route::post('/', [TaskController::class, 'store'])->name('customer.tasks.store');
-    //         Route::get('/{id}', [TaskController::class, 'show'])->name('customer.tasks.show');
-    //         Route::post('/{id}/cancel', [TaskController::class, 'cancel'])->name('customer.tasks.cancel');
-    //         Route::post('/{id}/rate', [TaskController::class, 'rate'])->name('customer.tasks.rate');
-    //         Route::post('/pricing-preview', [TaskController::class, 'pricingPreview'])->name('customer.tasks.pricing-preview');
-    //         Route::get('/statistics', [TaskController::class, 'statistics'])->name('customer.tasks.statistics');
-    //     });
+        // Task Management
+        Route::prefix('tasks')->group(function () {
+            Route::get('/', [TaskController::class, 'index'])->name('customer.tasks.index');
+            Route::post('/', [TaskController::class, 'store'])->name('customer.tasks.store');
+            Route::get('/{id}', [TaskController::class, 'show'])->name('customer.tasks.show');
+            Route::post('/{id}/cancel', [TaskController::class, 'cancel'])->name('customer.tasks.cancel');
+            Route::post('/{id}/rate', [TaskController::class, 'rate'])->name('customer.tasks.rate');
+            Route::post('/pricing-preview', [TaskController::class, 'pricingPreview'])->name('customer.tasks.pricing-preview');
+            Route::get('/statistics', [TaskController::class, 'statistics'])->name('customer.tasks.statistics');
+        });
 
-    //     // Chef Booking Flow
-    //     Route::prefix('chef')->group(function () {
-    //         Route::get('/services', [ChefBookingController::class, 'getServices'])->name('customer.chef.services');
-    //         Route::get('/cuisines', [ChefBookingController::class, 'getCuisines'])->name('customer.chef.cuisines');
-    //         Route::get('/dietary-preferences', [ChefBookingController::class, 'getDietaryPreferences'])->name('customer.chef.dietary-preferences');
-    //         Route::get('/optional-flags', [ChefBookingController::class, 'getOptionalFlags'])->name('customer.chef.optional-flags');
-    //         Route::get('/pax-time-options', [ChefBookingController::class, 'getPaxAndTimeOptions'])->name('customer.chef.pax-time-options');
-    //         Route::get('/addresses', [ChefBookingController::class, 'getAddresses'])->name('customer.chef.addresses');
-    //         Route::get('/complete-flow', [ChefBookingController::class, 'getCompleteFlow'])->name('customer.chef.complete-flow');
-    //         Route::post('/validate-booking', [ChefBookingController::class, 'validateBooking'])->name('customer.chef.validate-booking');
-    //         Route::post('/pricing-preview', [ChefBookingController::class, 'getPricingPreview'])->name('customer.chef.pricing-preview');
-    //         Route::get('/booking-rules', [ChefBookingController::class, 'getBookingRules'])->name('customer.chef.booking-rules');
-    //         Route::post('/check-availability', [ChefBookingController::class, 'checkAvailability'])->name('customer.chef.check-availability');
-    //     });
-    // });
+        // Chef Booking Flow
+        Route::prefix('chef')->group(function () {
+            Route::get('/services', [ChefBookingController::class, 'getServices'])->name('customer.chef.services');
+            Route::get('/cuisines', [ChefBookingController::class, 'getCuisines'])->name('customer.chef.cuisines');
+            Route::get('/dietary-preferences', [ChefBookingController::class, 'getDietaryPreferences'])->name('customer.chef.dietary-preferences');
+            Route::get('/optional-flags', [ChefBookingController::class, 'getOptionalFlags'])->name('customer.chef.optional-flags');
+            Route::get('/pax-time-options', [ChefBookingController::class, 'getPaxAndTimeOptions'])->name('customer.chef.pax-time-options');
+            Route::get('/addresses', [ChefBookingController::class, 'getAddresses'])->name('customer.chef.addresses');
+            Route::get('/complete-flow', [ChefBookingController::class, 'getCompleteFlow'])->name('customer.chef.complete-flow');
+            Route::post('/validate-booking', [ChefBookingController::class, 'validateBooking'])->name('customer.chef.validate-booking');
+            Route::post('/pricing-preview', [ChefBookingController::class, 'getPricingPreview'])->name('customer.chef.pricing-preview');
+            Route::get('/booking-rules', [ChefBookingController::class, 'getBookingRules'])->name('customer.chef.booking-rules');
+            Route::post('/check-availability', [ChefBookingController::class, 'checkAvailability'])->name('customer.chef.check-availability');
+        });
+    });
 
     // === Customer Routes ===
     Route::prefix('customer')->group(function () {
@@ -113,59 +113,7 @@ Route::prefix('v1')->group(function () {
 
     // === Mobile API Routes ===
 
-
-    // === Customer Mobile APIs ===
-    Route::prefix('customer')->group(function () {
-        // Authentication
-        Route::post('register', [\App\Http\Controllers\Api\Mobile\Customer\AuthController::class, 'register']);
-        Route::post('login', [\App\Http\Controllers\Api\Mobile\Customer\AuthController::class, 'login']);
-        Route::post('send-otp', [\App\Http\Controllers\Api\Mobile\Customer\AuthController::class, 'sendOTP']);
-        Route::post('verify-otp', [\App\Http\Controllers\Api\Mobile\Customer\AuthController::class, 'verifyOTP']);
-        Route::get('app-config', [\App\Http\Controllers\Api\Mobile\Customer\AuthController::class, 'appConfig']);
-
-        // Protected routes
-        Route::middleware('auth:sanctum')->group(function () {
-            Route::get('profile', [\App\Http\Controllers\Api\Mobile\Customer\AuthController::class, 'profile']);
-            Route::put('profile', [\App\Http\Controllers\Api\Mobile\Customer\AuthController::class, 'updateProfile']);
-            Route::post('logout', [\App\Http\Controllers\Api\Mobile\Customer\AuthController::class, 'logout']);
-        });
-
-        // Services
-        Route::get('categories', [\App\Http\Controllers\Api\Mobile\Customer\ServiceController::class, 'getCategories']);
-        Route::get('categories/{categoryId}/services', [\App\Http\Controllers\Api\Mobile\Customer\ServiceController::class, 'getServicesByCategory']);
-        Route::get('services/{serviceId}', [\App\Http\Controllers\Api\Mobile\Customer\ServiceController::class, 'getServiceDetails']);
-        Route::get('services/{serviceId}/providers', [\App\Http\Controllers\Api\Mobile\Customer\ServiceController::class, 'getServiceProviders']);
-        Route::get('services/search', [\App\Http\Controllers\Api\Mobile\Customer\ServiceController::class, 'searchServices']);
-        Route::get('services/popular', [\App\Http\Controllers\Api\Mobile\Customer\ServiceController::class, 'getPopularServices']);
-    });
-
     // === Service Provider Mobile APIs ===
-    Route::prefix('sp')->group(function () {
-        // Authentication
-        Route::post('register', [\App\Http\Controllers\Api\Mobile\SP\AuthController::class, 'register']);
-        Route::post('login', [\App\Http\Controllers\Api\Mobile\SP\AuthController::class, 'login']);
-        Route::post('send-otp', [\App\Http\Controllers\Api\Mobile\SP\AuthController::class, 'sendOTP']);
-        Route::post('verify-otp', [\App\Http\Controllers\Api\Mobile\SP\AuthController::class, 'verifyOTP']);
-
-        // Protected routes
-        Route::middleware('auth:sanctum')->group(function () {
-            Route::get('profile', [\App\Http\Controllers\Api\Mobile\SP\AuthController::class, 'profile']);
-            Route::put('profile', [\App\Http\Controllers\Api\Mobile\SP\AuthController::class, 'updateProfile']);
-            Route::post('upload-kyc', [\App\Http\Controllers\Api\Mobile\SP\AuthController::class, 'uploadKYC']);
-            Route::post('logout', [\App\Http\Controllers\Api\Mobile\SP\AuthController::class, 'logout']);
-
-            // Task Management
-            Route::get('dashboard', [\App\Http\Controllers\Api\Mobile\SP\TaskController::class, 'dashboard']);
-            Route::get('tasks', [\App\Http\Controllers\Api\Mobile\SP\TaskController::class, 'getTaskRequests']);
-            Route::get('tasks/{taskId}', [\App\Http\Controllers\Api\Mobile\SP\TaskController::class, 'getTaskDetails']);
-            Route::post('tasks/{taskId}/accept', [\App\Http\Controllers\Api\Mobile\SP\TaskController::class, 'acceptTask']);
-            Route::post('tasks/{taskId}/reject', [\App\Http\Controllers\Api\Mobile\SP\TaskController::class, 'rejectTask']);
-            Route::put('tasks/{taskId}/status', [\App\Http\Controllers\Api\Mobile\SP\TaskController::class, 'updateTaskStatus']);
-            Route::get('earnings', [\App\Http\Controllers\Api\Mobile\SP\TaskController::class, 'getEarnings']);
-            Route::put('availability', [\App\Http\Controllers\Api\Mobile\SP\TaskController::class, 'updateAvailability']);
-        });
-    });
-
 
     // === Core API Routes ===
 

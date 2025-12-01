@@ -2,7 +2,9 @@
 @"
 # Node / PHP / env
 .env
-env.development
+env.dev
+env.uat
+env.prod
 .env.local
 .env.*.local
 
